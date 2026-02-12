@@ -1,48 +1,78 @@
 """
 Module: astronomy.py
 Description: Provides high-precision astronomical calculations including 
-Equation of Time (EoT) corrections and Solar Longitude analysis.
+Equation of Time (EoT) corrections and Solar Ecliptic Longitude analysis.
+
+References:
+- Smart, W.M. (1977). Textbook on Spherical Astronomy.
+- Meeus, J. (1998). Astronomical Algorithms.
 """
 
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Tuple
+
+# Astronomical Constants
+J2000_EPOCH = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+DEGREES_PER_RADIAN = 180 / math.pi
+RADIANS_PER_DEGREE = math.pi / 180
+MINUTES_PER_DEGREE_LONGITUDE = 4.0  # Earth rotates 1 degree every 4 minutes
+
+def _to_utc(dt: datetime) -> datetime:
+    """Helper to enforce UTC timezone on inputs."""
+    if dt.tzinfo is None:
+        # Assume naive datetime is UTC to avoid ambiguity
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 def calculate_equation_of_time(day_of_year: int) -> float:
     """
-    Approximates the Equation of Time (EoT) correction factor.
-    The EoT creates the difference between Apparent Solar Time and Mean Solar Time
-    due to the obliquity of the ecliptic and the eccentricity of Earth's orbit.
+    Calculates the Equation of Time (EoT) correction factor.
     
-    :param day_of_year: The nth day of the year (1-366).
-    :return: Correction in minutes.
-    """
-    # Approximation formula (Smart, 1977)
-    # B is in radians
-    B = 2 * math.pi * (day_of_year - 81) / 365
-    eot = 9.87 * math.sin(2 * B) - 7.53 * math.cos(B) - 1.5 * math.sin(B)
-    return eot
+    The EoT accounts for the discrepancy between Apparent Solar Time (Sundial)
+    and Mean Solar Time (Clock) caused by:
+    1. The obliquity of the ecliptic (approx 23.44 degrees).
+    2. The eccentricity of Earth's orbit (approx 0.0167).
 
-def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
+    :param day_of_year: The nth day of the year (1-366).
+    :return: Time correction in minutes (positive means Sun is fast).
     """
-    Converts a standard UTC-based datetime to Local Apparent Solar Time (LAST).
+    # B parameter approximation (Smart, 1977)
+    # B represents the mean anomaly of the Earth relative to the perihelion.
+    B = 2 * math.pi * (day_of_year - 81) / 365
     
-    Formula: LAST = Local Standard Time + (Long - StandardMeridian)*4min + EoT
+    # EoT Formula: E = 9.87sin(2B) - 7.53cos(B) - 1.5sin(B)
+    eot_minutes = (9.87 * math.sin(2 * B)) - (7.53 * math.cos(B)) - (1.5 * math.sin(B))
     
-    :param dt: Datetime object (assumed naive is Local Standard Time or aware is UTC).
-    :param longitude: Observer's longitude (East is positive).
-    :return: Adjusted Datetime object representing True Solar Time.
+    return eot_minutes
+
+def calculate_solar_longitude(dt: datetime) -> float:
     """
-    # 1. Calculate offset from UTC (assume input is UTC for simplicity in this demo)
-    # In production, this handles timezone localization via `pytz`
+    Calculates the Apparent Solar Ecliptic Longitude (Lambda).
+    Crucial for determining Solar Terms (JieQi) for Month Pillar switching.
     
-    # 2. Solar noon offset: Earth rotates 1 degree every 4 minutes.
-    # UTC is at 0 degrees.
-    geo_offset_minutes = longitude * 4
+    Algorithm simplified from VSOP87 for moderate precision.
     
-    # 3. Equation of Time correction
-    day_of_year = dt.timetuple().tm_yday
-    eot_minutes = calculate_equation_of_time(day_of_year)
+    :param dt: UTC Datetime.
+    :return: Degrees (0.0 - 360.0), where 0 is Vernal Equinox.
+    """
+    dt_utc = _to_utc(dt)
     
-    total_offset = timedelta(minutes=geo_offset_minutes + eot_minutes)
+    # Calculate Julian Days (n) since J2000.0
+    delta = dt_utc - J2000_EPOCH
+    n = delta.days + (delta.seconds / 86400.0)
     
-    return dt + total_offset
+    # Mean Longitude of the Sun (L)
+    # L = 280.460 + 0.9856474 * n
+    L = (280.460 + 0.9856474 * n) % 360
+    
+    # Mean Anomaly of the Sun (g)
+    # g = 357.528 + 0.9856003 * n
+    g_degrees = (357.528 + 0.9856003 * n) % 360
+    g_radians = g_degrees * RADIANS_PER_DEGREE
+    
+    # Ecliptic Longitude (Lambda)
+    # Lambda = L + 1.915 * sin(g) + 0.020 * sin(2g)
+    lambda_degrees = L + 1.915 * math.sin(g_radians) + 0.020 * math.sin(2 * g_radians)
+    
+    return lambda_degrees % 360
