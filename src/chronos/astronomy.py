@@ -76,3 +76,16 @@ def calculate_solar_longitude(dt: datetime) -> float:
     lambda_degrees = L + 1.915 * math.sin(g_radians) + 0.020 * math.sin(2 * g_radians)
     
     return lambda_degrees % 360
+    
+def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
+    """
+    Converts a standard UTC timestamp to Local Apparent Solar Time (LAST).
+    
+    This function applies two physics corrections:
+    1. Geographic Offset: Longitude difference from UTC (Greenwich).
+    2. Equation of Time: Orbital eccentricity correction.
+    
+    :param dt: Input datetime (UTC).
+    :param longitude: Observer's longitude (East positive, West negative).
+    :return: Adjusted Datetime object representing True Solar Time.
+    """
