@@ -89,3 +89,21 @@ def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     :param longitude: Observer's longitude (East positive, West negative).
     :return: Adjusted Datetime object representing True Solar Time.
     """
+    dt_utc = _to_utc(dt)
+    
+    # 1. Geographic Offset Calculation
+    # Earth rotates 15 degrees per hour -> 4 minutes per degree.
+    geo_offset_minutes = longitude * MINUTES_PER_DEGREE_LONGITUDE
+    
+    # 2. Equation of Time Calculation
+    day_of_year = dt_utc.timetuple().tm_yday
+    eot_minutes = calculate_equation_of_time(day_of_year)
+    
+    # 3. Apply Total Offset
+    total_offset = timedelta(minutes=geo_offset_minutes + eot_minutes)
+    solar_time = dt_utc + total_offset
+    
+    # Note: The result is conceptually "Solar Time" at that location.
+    # We strip tzinfo in the final step or keep it as reference depending on downstream needs.
+    # Here we return a naive datetime implied to be local solar time.
+    return solar_time.replace(tzinfo=None)
