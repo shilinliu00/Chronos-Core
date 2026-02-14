@@ -2,6 +2,11 @@
 Module: converter.py
 Description: The main engine utilizing astronomical data to derive 
 Base-60 temporal coordinates (The Four Pillars).
+
+Implements the classic algorithms:
+1. Solar Term delineation for Year/Month boundaries (LiChun).
+2. "Five Tigers Chasing Month" (Wu Hu Dun) for Month Stem derivation.
+3. "Five Rats Chasing Hour" (Wu Hu Dun) for Hour Stem derivation.
 """
 
 from datetime import datetime
