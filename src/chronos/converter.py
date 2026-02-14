@@ -9,9 +9,12 @@ Implements the classic algorithms:
 3. "Five Rats Chasing Hour" (Wu Hu Dun) for Hour Stem derivation.
 """
 
-from datetime import datetime
+import math
+from datetime import datetime, timedelta
+from typing import Dict, Any
+
 from .cyclic_math import CyclicVariable
-from .astronomy import get_true_solar_time
+from .astronomy import get_true_solar_time, calculate_solar_longitude
 
 class TemporalCoordinateEngine:
     """
