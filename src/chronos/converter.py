@@ -20,61 +20,76 @@ class TemporalCoordinateEngine:
     """
     Main Interface for converting Gregorian timestamps into 
     Cyclic Temporal Coordinates (Four Pillars).
+    
+    Architecture:
+    - Input: UTC Datetime + Geo-coordinates.
+    - Process: Physics Correction (EoT) -> Solar Longitude Analysis -> Pattern Mapping.
+    - Output: 4-Dimensional Cyclic Vector.
     """
     
-    # Reference Date: Jan 1, 1900 was a Jia-Xu (10) day.
+    # Reference Date for DAY pillar: Jan 1, 1900 was a Jia-Xu (Index 10) day.
+    # This is a continuous count independent of solar terms.
     REF_DATE = datetime(1900, 1, 1)
     REF_DAY_IDX = 10 
     
-    def __init__(self, use_astronomy_correction=True):
+    def __init__(self, use_astronomy_correction: bool = True):
         self.precise_mode = use_astronomy_correction
 
-    def get_coordinates(self, dt: datetime, longitude: float = 0.0):
+    def _get_year_index(self, dt: datetime, solar_lon: float) -> int:
         """
-        Returns the Year, Month, Day, and Hour cyclic variables.
-        
-        :param dt: Input datetime (UTC).
-        :param longitude: Observer's longitude for Solar Time correction.
+        Determines the Year Pillar Index.
+        Critical Logic: The year does NOT change on Jan 1st. 
+        It changes at 'LiChun' (Start of Spring), approx Feb 4th, 
+        when Solar Longitude reaches 315 degrees.
         """
-        # 1. Adjust for True Solar Time (Critical for Hour Pillar accuracy)
-        if self.precise_mode:
-            solar_dt = get_true_solar_time(dt, longitude)
-        else:
-            solar_dt = dt
-
-        # 2. Calculate Day Pillar (Mathematical Offset)
-        # Days since reference
-        delta = solar_dt - self.REF_DATE
-        days_passed = delta.days
-        day_idx = (self.REF_DAY_IDX + days_passed) % 60
-        day_pillar = CyclicVariable(day_idx)
-
-        # 3. Calculate Hour Pillar
-        # Hour pillar is derived from Day Stem + Time of Day
-        # Logic: (DayStemIndex * 2 + HourIndex) % 60
-        # This uses the "Five Rat Pursuit" (Wu Hu Dun) algorithm logic implicitly
-        hour_bracket = (solar_dt.hour + 1) // 2
-        # Simplified algorithm for demo (In real implementation, uses lookup table based on Day Stem)
-        # Approximating logic for strict Base-60 math demonstration:
-        start_stem_idx = (day_pillar.index % 10) % 5 * 2
-        hour_idx = (start_stem_idx * 10 + hour_bracket) % 60 # Simplified placeholder logic
-        hour_pillar = CyclicVariable(hour_idx)
-
-        # 4. Year/Month (Requires Solar Term lookup - mocked here for brevity)
-        # Real implementation would query the JPL ephemeris for exact solar longitude terms.
-        year_pillar = CyclicVariable((dt.year - 4) % 60) # Simple approx
-        month_pillar = CyclicVariable(dt.month + 12) # Placeholder
+        # 1984 was the start of a new cycle (Jia-Zi, 0)
+        base_year = 1984
+        diff = dt.year - base_year
         
-        return {
-            "metadata": {
-                "gregorian_utc": dt.isoformat(),
-                "true_solar_time": solar_dt.isoformat(),
-                "longitude": longitude
-            },
-            "coordinates": {
-                "year": year_pillar.to_json(),
-                "month": month_pillar.to_json(),
-                "day": day_pillar.to_json(),
-                "hour": hour_pillar.to_json()
-            }
-        }
+        # If before LiChun (315 deg), it belongs to the previous year conceptually
+        # Note: 315 degrees is the exact astronomical definition of Start of Spring
+        if solar_lon < 315 and dt.month <= 2: 
+            # Case: Jan/Feb before Feb 4th
+            diff -= 1
+            
+        # Handle wrap-around for negative differences
+        return diff % 60
+
+    def _get_month_index(self, year_stem_idx: int, solar_lon: float) -> int:
+        """
+        Determines the Month Pillar Index using 'Five Tigers Chasing Month'.
+        
+        Algorithm:
+        1. Determine the Lunar Month Branch based on Solar Longitude.
+           (e.g., 315-345 deg = Tiger/Yin).
+        2. Calculate Month Stem based on Year Stem.
+           Formula: (YearStem % 5) * 2 + 2 + (MonthBranchOffset)
+        """
+        # Map Solar Longitude to Month Branch (Yin=2, Mao=3, ..., Chou=1)
+        # LiChun (315) -> Yin (2). 
+        # (SolarLon - 315) / 30 gives the offset from Tiger.
+        # We handle the circular degree wrap-around (360 -> 0)
+        
+        effective_lon = solar_lon if solar_lon >= 315 else solar_lon + 360
+        branch_offset_from_tiger = int((effective_lon - 315) / 30)
+        
+        # The Branch Index for the month (Tiger is index 2)
+        month_branch_idx = (2 + branch_offset_from_tiger) % 12
+        
+        # Calculate Stem using "Five Tigers" formula
+        # Base stem for Tiger month depends on Year Stem
+        base_stem_idx = (year_stem_idx % 5) * 2 + 2
+        
+        # Current month stem
+        month_stem_idx = (base_stem_idx + branch_offset_from_tiger) % 10
+        
+        # Combine into Base-60 index (Stem-Branch)
+        # We need to find the index X where X%10==stem and X%12==branch
+        # Optimized lookup or simple search in 60-cycle
+        # Since stem/branch move together, index = (StemIndex - BranchIndex)/2 * 10 + Branch? 
+        # Easier robust way: find matching pair in Z_60
+        # (This is O(1) in concept, O(60) in brute implementation, but fast)
+        for i in range(60):
+            if i % 10 == month_stem_idx and i % 12 == month_branch_idx:
+                return i
+        return 0 # Should not reach here
