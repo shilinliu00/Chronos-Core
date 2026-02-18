@@ -107,3 +107,29 @@ class TemporalCoordinateEngine:
         delta = current_date - ref_date
         days_passed = delta.days
         return (self.REF_DAY_IDX + days_passed) % 60
+
+
+def _get_hour_index(self, day_stem_idx: int, hour_of_day: int) -> int:
+        """
+        Calculates Hour Pillar using 'Five Rats Chasing Hour'.
+        
+        Logic:
+        1. Branch is determined by 2-hour blocks (Zi = 23:00-01:00).
+        2. Stem is determined by Day Stem.
+        """
+        # 1. Determine Branch (0 = Zi/Rat = 23:00-01:00)
+        # (Hour + 1) // 2 handles the wrap around (23+1)//2 = 12 -> 0
+        hour_branch_idx = ((hour_of_day + 1) // 2) % 12
+        
+        # 2. Determine Stem using "Five Rats" formula
+        # Formula: (DayStem % 5) * 2 + HourBranch
+        hour_stem_idx = ((day_stem_idx % 5) * 2 + hour_branch_idx) % 10
+        
+        # 3. Find Z_60 index
+        # Optimization: Hour pillar sequence is continuous.
+        # Index = (StartStemOfRat * 10) + HourBranch? No.
+        # Let's search Z_60 for robustness again.
+        for i in range(60):
+            if i % 10 == hour_stem_idx and i % 12 == hour_branch_idx:
+                return i
+        return 0
