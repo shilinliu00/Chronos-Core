@@ -93,3 +93,17 @@ class TemporalCoordinateEngine:
             if i % 10 == month_stem_idx and i % 12 == month_branch_idx:
                 return i
         return 0 # Should not reach here
+
+    def _get_day_index(self, solar_dt: datetime) -> int:
+        """
+        Calculates Day Pillar based on mathematical offset from epoch.
+        Independent of astronomical position, purely continuous count.
+        """
+        # Strip time for pure date math
+        current_date = solar_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Handle timezone naive/aware diff
+        ref_date = self.REF_DATE.replace(tzinfo=current_date.tzinfo)
+        
+        delta = current_date - ref_date
+        days_passed = delta.days
+        return (self.REF_DAY_IDX + days_passed) % 60
