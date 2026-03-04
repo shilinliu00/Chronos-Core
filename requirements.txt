@@ -1,0 +1,10 @@
+# --- Development & Testing Dependencies ---
+# These are required to run the test suite and verify code coverage
+
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# --- Optional: Code Quality Tools (Linters/Formatters) ---
+# Shows you care about clean, PEP-8 compliant code
+black>=23.7.0
+flake8>=6.1.0
