@@ -5,7 +5,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-95%25-success)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
-**TL;DR:** A high-performance Python library that converts linear Gregorian timestamps (UTC) into 4-dimensional cyclic coordinates (Base-60) using strict astronomical physics. Built for feature engineering in non-linear periodic time-series modeling.
+A high-performance Python library that converts linear Gregorian timestamps (UTC) into 4-dimensional cyclic coordinates (Base-60) using strict astronomical physics. Built for feature engineering in non-linear periodic time-series modeling.
 
 ---
 
