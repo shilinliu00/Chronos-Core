@@ -92,7 +92,11 @@ class TemporalCoordinateEngine:
         for i in range(60):
             if i % 10 == month_stem_idx and i % 12 == month_branch_idx:
                 return i
-        return 0 # Should not reach here
+        # Stem/branch parity always matches by construction; reaching here
+        # means the "Five Tigers" inputs were inconsistent.
+        raise AssertionError(
+            f"No Z_60 index matches stem={month_stem_idx}, branch={month_branch_idx}"
+        )
 
     def _get_day_index(self, solar_dt: datetime) -> int:
         """
@@ -109,75 +113,80 @@ class TemporalCoordinateEngine:
         return (self.REF_DAY_IDX + days_passed) % 60
 
 
-def _get_hour_index(self, day_stem_idx: int, hour_of_day: int) -> int:
-        """
-        Calculates Hour Pillar using 'Five Rats Chasing Hour'.
+    def _get_hour_index(self, day_stem_idx: int, hour_of_day: int) -> int:
+            """
+            Calculates Hour Pillar using 'Five Rats Chasing Hour'.
         
-        Logic:
-        1. Branch is determined by 2-hour blocks (Zi = 23:00-01:00).
-        2. Stem is determined by Day Stem.
-        """
-        # 1. Determine Branch (0 = Zi/Rat = 23:00-01:00)
-        # (Hour + 1) // 2 handles the wrap around (23+1)//2 = 12 -> 0
-        hour_branch_idx = ((hour_of_day + 1) // 2) % 12
+            Logic:
+            1. Branch is determined by 2-hour blocks (Zi = 23:00-01:00).
+            2. Stem is determined by Day Stem.
+            """
+            # 1. Determine Branch (0 = Zi/Rat = 23:00-01:00)
+            # (Hour + 1) // 2 handles the wrap around (23+1)//2 = 12 -> 0
+            hour_branch_idx = ((hour_of_day + 1) // 2) % 12
         
-        # 2. Determine Stem using "Five Rats" formula
-        # Formula: (DayStem % 5) * 2 + HourBranch
-        hour_stem_idx = ((day_stem_idx % 5) * 2 + hour_branch_idx) % 10
+            # 2. Determine Stem using "Five Rats" formula
+            # Formula: (DayStem % 5) * 2 + HourBranch
+            hour_stem_idx = ((day_stem_idx % 5) * 2 + hour_branch_idx) % 10
         
-        # 3. Find Z_60 index
-        # Optimization: Hour pillar sequence is continuous.
-        # Index = (StartStemOfRat * 10) + HourBranch? No.
-        # Let's search Z_60 for robustness again.
-        for i in range(60):
-            if i % 10 == hour_stem_idx and i % 12 == hour_branch_idx:
-                return i
-        return 0
+            # 3. Find Z_60 index
+            # Optimization: Hour pillar sequence is continuous.
+            # Index = (StartStemOfRat * 10) + HourBranch? No.
+            # Let's search Z_60 for robustness again.
+            for i in range(60):
+                if i % 10 == hour_stem_idx and i % 12 == hour_branch_idx:
+                    return i
+            # Stem/branch parity always matches by construction; reaching here
+            # means the "Five Rats" inputs were inconsistent.
+            raise AssertionError(
+                f"No Z_60 index matches stem={hour_stem_idx}, branch={hour_branch_idx}"
+            )
 
-def get_coordinates(self, dt: datetime, longitude: float = 0.0) -> Dict[str, Any]:
-        """
-        Executes the conversion pipeline.
+    def get_coordinates(self, dt: datetime, longitude: float = 0.0) -> Dict[str, Any]:
+            """
+            Executes the conversion pipeline.
         
-        :param dt: Input datetime (UTC).
-        :param longitude: Observer's longitude for Solar Time correction.
-        """
-        # 1. Physics Layer: Adjust for True Solar Time (Critical for Hour Boundary)
-        if self.precise_mode:
-            solar_dt = get_true_solar_time(dt, longitude)
-            # Calculate Solar Longitude (Lambda) for Year/Month boundaries
-            solar_lambda = calculate_solar_longitude(dt) 
-        else:
-            solar_dt = dt
-            solar_lambda = 0.0 # Fallback/Mock
+            :param dt: Input datetime (UTC).
+            :param longitude: Observer's longitude for Solar Time correction.
+            """
+            # 1. Physics Layer: Adjust for True Solar Time (Critical for Hour Boundary)
+            # Solar longitude is geocentric (location-independent), so it is always
+            # computed exactly. The precise_mode flag only toggles the EoT/longitude
+            # correction applied to the clock time itself (which drives Day/Hour).
+            solar_lambda = calculate_solar_longitude(dt)
+            if self.precise_mode:
+                solar_dt = get_true_solar_time(dt, longitude)
+            else:
+                solar_dt = dt
 
-        # 2. Mathematical Layer: Calculate Indices
-        # A. Day (Base for Hour)
-        day_idx = self._get_day_index(solar_dt)
-        day_pillar = CyclicVariable(day_idx)
+            # 2. Mathematical Layer: Calculate Indices
+            # A. Day (Base for Hour)
+            day_idx = self._get_day_index(solar_dt)
+            day_pillar = CyclicVariable(day_idx)
 
-        # B. Year (Base for Month)
-        year_idx = self._get_year_index(solar_dt, solar_lambda)
-        year_pillar = CyclicVariable(year_idx)
+            # B. Year (Base for Month)
+            year_idx = self._get_year_index(solar_dt, solar_lambda)
+            year_pillar = CyclicVariable(year_idx)
 
-        # C. Month (Derived from Year + Solar Term)
-        month_idx = self._get_month_index(year_pillar.stem_index, solar_lambda)
-        month_pillar = CyclicVariable(month_idx)
+            # C. Month (Derived from Year + Solar Term)
+            month_idx = self._get_month_index(year_pillar.stem_index, solar_lambda)
+            month_pillar = CyclicVariable(month_idx)
 
-        # D. Hour (Derived from Day + Solar Time)
-        hour_idx = self._get_hour_index(day_pillar.stem_index, solar_dt.hour)
-        hour_pillar = CyclicVariable(hour_idx)
+            # D. Hour (Derived from Day + Solar Time)
+            hour_idx = self._get_hour_index(day_pillar.stem_index, solar_dt.hour)
+            hour_pillar = CyclicVariable(hour_idx)
         
-        return {
-            "metadata": {
-                "gregorian_utc": dt.isoformat(),
-                "true_solar_time": solar_dt.isoformat(),
-                "solar_longitude_deg": round(solar_lambda, 4),
-                "longitude": longitude
-            },
-            "coordinates": {
-                "year": year_pillar.to_json(),
-                "month": month_pillar.to_json(),
-                "day": day_pillar.to_json(),
-                "hour": hour_pillar.to_json()
+            return {
+                "metadata": {
+                    "gregorian_utc": dt.isoformat(),
+                    "true_solar_time": solar_dt.isoformat(),
+                    "solar_longitude_deg": round(solar_lambda, 4),
+                    "longitude": longitude
+                },
+                "coordinates": {
+                    "year": year_pillar.to_json(),
+                    "month": month_pillar.to_json(),
+                    "day": day_pillar.to_json(),
+                    "hour": hour_pillar.to_json()
+                }
             }
-        }

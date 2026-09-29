@@ -4,7 +4,7 @@ Description: Implements Base-60 (Sexagenary) cyclic arithmetic and data structur
 This module handles the non-decimal temporal coordinates used in the engine.
 """
 
-from typing import Union, Tuple, Dict
+from typing import Union, Dict
 
 class CyclicVariable:
     """
@@ -27,6 +27,26 @@ class CyclicVariable:
 
     # Element Vector: 0-1 Wood, 2-3 Fire, 4-5 Earth, 6-7 Metal, 8-9 Water
     ELEMENT_VECTOR = ["Wood", "Wood", "Fire", "Fire", "Earth", "Earth", "Metal", "Metal", "Water", "Water"]
+
+    def __init__(self, index: int):
+        """
+        Creates a variable from a raw position in Z_60.
+        The index is normalized into [0, 60), so arithmetic may freely
+        overflow the cycle (e.g. CyclicVariable(59) + 1 -> Jia-Zi).
+        """
+        if not isinstance(index, int):
+            raise TypeError("CyclicVariable index must be an integer")
+        self._index = index % 60
+
+    @property
+    def stem_index(self) -> int:
+        """Position in Z_10 (Heavenly Stems)."""
+        return self._index % 10
+
+    @property
+    def branch_index(self) -> int:
+        """Position in Z_12 (Earthly Branches)."""
+        return self._index % 12
 
     @property
     def stem(self) -> str:
@@ -89,7 +109,7 @@ class CyclicVariable:
         - If other is int: Returns new CyclicVariable (obj).
         """
 
-  if isinstance(other, CyclicVariable):
+        if isinstance(other, CyclicVariable):
             # Calculate minimal forward distance in the cycle
             return (self._index - other._index) % 60
         if isinstance(other, int):
