@@ -17,6 +17,21 @@ class CyclicVariable:
     # Memory optimization: Restricts attribute creation to save RAM on large datasets
     __slots__ = ['_index']
 
+    # NaYin (纳音) table: 30 attributes, one per consecutive pair of pillars,
+    # following the classic rhyme (六十甲子纳音歌). Each entry: (name_cn, element).
+    NAYIN = [
+        ("海中金", "Metal"), ("炉中火", "Fire"), ("大林木", "Wood"),
+        ("路旁土", "Earth"), ("剑锋金", "Metal"), ("山头火", "Fire"),
+        ("涧下水", "Water"), ("城头土", "Earth"), ("白蜡金", "Metal"),
+        ("杨柳木", "Wood"), ("泉中水", "Water"), ("屋上土", "Earth"),
+        ("霹雳火", "Fire"), ("松柏木", "Wood"), ("长流水", "Water"),
+        ("沙中金", "Metal"), ("山下火", "Fire"), ("平地木", "Wood"),
+        ("壁上土", "Earth"), ("金箔金", "Metal"), ("覆灯火", "Fire"),
+        ("天河水", "Water"), ("大驿土", "Earth"), ("钗钏金", "Metal"),
+        ("桑柘木", "Wood"), ("大溪水", "Water"), ("沙中土", "Earth"),
+        ("天上火", "Fire"), ("石榴木", "Wood"), ("大海水", "Water"),
+    ]
+
     # Master Data Vectors
     STEMS = ["Jia", "Yi", "Bing", "Ding", "Wu", "Ji", "Geng", "Xin", "Ren", "Gui"]
     BRANCHES = ["Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai"]
@@ -108,6 +123,19 @@ class CyclicVariable:
         """
         return self.ELEMENT_VECTOR[self.stem_index]
 
+    @property
+    def na_yin(self) -> str:
+        """
+        NaYin (纳音) name of the pillar, e.g. "海中金".
+        Each NaYin spans two consecutive pillars, so index // 2 selects it.
+        """
+        return self.NAYIN[self._index // 2][0]
+
+    @property
+    def na_yin_element(self) -> str:
+        """Elemental attribute (WuXing) of the pillar's NaYin."""
+        return self.NAYIN[self._index // 2][1]
+
     def is_clashing(self, other: 'CyclicVariable') -> bool:
         """
         Determines if there is a 'Clash' (Antagonistic relationship) using modular arithmetic.
@@ -168,5 +196,7 @@ class CyclicVariable:
             "stem": self.stem,
             "branch": self.branch,
             "element": self.element,
+            "na_yin": self.na_yin,
+            "na_yin_element": self.na_yin_element,
             "label_cn": f"{self.stem_cn}{self.branch_cn}"
         }

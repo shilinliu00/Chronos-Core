@@ -127,8 +127,36 @@ class TestIdentity:
             "stem": "Jia",
             "branch": "Zi",
             "element": "Wood",
+            "na_yin": "海中金",
+            "na_yin_element": "Metal",
             "label_cn": "甲子",
         }
 
     def test_repr(self):
         assert repr(CyclicVariable(0)) == "<CV(0): JiaZi (甲子)>"
+
+
+class TestNaYin:
+    def test_table_has_thirty_entries(self):
+        assert len(CyclicVariable.NAYIN) == 30
+
+    def test_na_yin_endpoints(self):
+        assert CyclicVariable(0).na_yin == "海中金"    # Jia-Zi
+        assert CyclicVariable(1).na_yin == "海中金"    # Yi-Chou, same pair
+        assert CyclicVariable(59).na_yin == "大海水"   # Gui-Hai
+
+    def test_na_yin_mid_cycle_spots(self):
+        assert CyclicVariable(8).na_yin == "剑锋金"    # Ren-Shen pair
+        assert CyclicVariable(24).na_yin == "霹雳火"   # Wu-Zi pair
+
+    def test_na_yin_element_tracks_table(self):
+        assert CyclicVariable(0).na_yin_element == "Metal"   # 海中金
+        assert CyclicVariable(2).na_yin_element == "Fire"    # 炉中火
+        assert CyclicVariable(4).na_yin_element == "Wood"    # 大林木
+        assert CyclicVariable(6).na_yin_element == "Earth"   # 路旁土
+        assert CyclicVariable(59).na_yin_element == "Water"  # 大海水
+
+    def test_na_yin_shifts_only_every_two_pillars(self):
+        for i in range(0, 60, 2):
+            assert CyclicVariable(i).na_yin == CyclicVariable(i + 1).na_yin
+        assert CyclicVariable(1).na_yin != CyclicVariable(2).na_yin
