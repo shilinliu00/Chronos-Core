@@ -30,6 +30,8 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
 * **O(1) Pattern Matching:** Relationships between time points are computed via modular arithmetic rather than heavy lookup tables. For example, a 180-degree phase shift (Clash) is evaluated as:
   $$(a - b) \pmod{12} = 6$$
 * **Hashable States:** Objects implement `__hash__` and `__eq__`, allowing temporal states to be directly used as keys in Hash Maps for high-speed frequency counting.
+* **Closed-form stem–branch resolution:** `CyclicVariable.from_stem_branch(stem, branch)` solves the Z_10 × Z_12 index via the Chinese Remainder Theorem in O(1), replacing the old O(60) brute-force search.
+* **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
 
 ---
 
@@ -100,7 +102,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-49 tests, 99% coverage. Day-pillar anchors are cross-checked against
+64 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
@@ -115,7 +117,8 @@ match the known February minimum (≈ −14 min) and November maximum
   (e.g. the exact minute of 立春) should allow for this.
 - **Late Zi hour convention.** 23:00–24:00 is treated as Zi hour of the
   *current* day. Some BaZi schools roll it into the next day; this engine
-  deliberately does not.
+  deliberately does not. Symmetrically, 00:00–01:00 is Zi hour of the day
+  that just began.
 - **Equation of Time** uses the Smart (1977) approximation (±0.5 min),
   adequate for pillar boundaries but not for arc-second work.
 
