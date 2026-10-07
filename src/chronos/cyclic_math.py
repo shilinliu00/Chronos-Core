@@ -38,6 +38,33 @@ class CyclicVariable:
             raise TypeError("CyclicVariable index must be an integer")
         self._index = index % 60
 
+    @classmethod
+    def from_stem_branch(cls, stem_idx: int, branch_idx: int) -> 'CyclicVariable':
+        """
+        Builds a variable directly from stem and branch indices, in closed form.
+
+        Solves i = stem (mod 10), i = branch (mod 12) via the Chinese
+        Remainder Theorem. Write i = stem + 10k; then 10k = branch - stem
+        (mod 12). Since gcd(10, 12) = 2, divide through: 5k = (branch - stem)/2
+        (mod 6), and 5 is its own inverse mod 6, so
+        k = 5 * ((branch - stem) / 2) (mod 6).
+
+        A solution exists only when stem and branch share parity, which holds
+        by construction in the sexagenary cycle.
+        """
+        if not isinstance(stem_idx, int) or not isinstance(branch_idx, int):
+            raise TypeError("stem and branch indices must be integers")
+        if not 0 <= stem_idx < 10:
+            raise ValueError("stem index must be in [0, 10)")
+        if not 0 <= branch_idx < 12:
+            raise ValueError("branch index must be in [0, 12)")
+        if (stem_idx - branch_idx) % 2 != 0:
+            raise ValueError(
+                f"stem {stem_idx} and branch {branch_idx} have mismatched parity"
+            )
+        k = (5 * (((branch_idx - stem_idx) % 12) // 2)) % 6
+        return cls(stem_idx + 10 * k)
+
     @property
     def stem_index(self) -> int:
         """Position in Z_10 (Heavenly Stems)."""

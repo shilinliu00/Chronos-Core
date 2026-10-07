@@ -17,6 +17,31 @@ class TestConstruction:
         with pytest.raises(TypeError):
             CyclicVariable("0")
 
+    def test_from_stem_branch_round_trips_all_sixty(self):
+        # Closed-form CRT lookup must agree with the raw index everywhere.
+        for i in range(60):
+            v = CyclicVariable(i)
+            built = CyclicVariable.from_stem_branch(v.stem_index, v.branch_index)
+            assert built == v, i
+
+    def test_from_stem_branch_known_values(self):
+        assert CyclicVariable.from_stem_branch(0, 0) == CyclicVariable(0)    # Jia-Zi
+        assert CyclicVariable.from_stem_branch(6, 8) == CyclicVariable(56)   # Geng-Shen
+        assert CyclicVariable.from_stem_branch(9, 11) == CyclicVariable(59)  # Gui-Hai
+
+    def test_from_stem_branch_rejects_mismatched_parity(self):
+        # Stem/branch parity always matches inside Z_60, so (0, 1) is impossible.
+        with pytest.raises(ValueError):
+            CyclicVariable.from_stem_branch(0, 1)
+
+    def test_from_stem_branch_rejects_out_of_range(self):
+        with pytest.raises(ValueError):
+            CyclicVariable.from_stem_branch(10, 0)
+        with pytest.raises(ValueError):
+            CyclicVariable.from_stem_branch(0, 12)
+        with pytest.raises(TypeError):
+            CyclicVariable.from_stem_branch(1.0, 1)
+
     def test_stem_branch_indices(self):
         v = CyclicVariable(0)  # Jia-Zi
         assert (v.stem_index, v.branch_index) == (0, 0)
