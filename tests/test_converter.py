@@ -164,3 +164,33 @@ class TestPipeline:
     def test_naive_datetime_accepted(self, plain):
         res = plain.get_coordinates(datetime(2024, 1, 1, 12, 0), 0.0)
         assert labels(res["coordinates"]["day"]) == "JiaZi"
+
+
+class TestBoundaries:
+    def test_year_flips_exactly_at_315_degrees(self, plain):
+        dt = utc(2024, 2, 4, 12, 0)
+        assert plain._get_year_index(dt, 315.0) == 40    # Jia-Chen
+        assert plain._get_year_index(dt, 314.99) == 39   # still Gui-Mao
+
+    def test_month_flips_exactly_at_315_degrees(self, plain):
+        # At LiChun the month becomes Yin (Bing-Yin for a Jia year);
+        # a hair below it is still Chou of the previous year (Gui year).
+        assert plain._get_month_index(0, 315.0) == 2     # Bing-Yin
+        assert plain._get_month_index(8, 314.99) == 49   # Gui-Chou
+
+    def test_month_flips_exactly_at_345_degrees(self, plain):
+        # JingZhe: Yin month ends, Mao month begins (Jia year).
+        assert plain._get_month_index(0, 344.99) == 2   # Bing-Yin
+        assert plain._get_month_index(0, 345.0) == 3    # Ding-Mao
+
+    def test_month_consistent_across_degree_wrap(self, plain):
+        # 359.9 deg and 0.1 deg are adjacent on the circle; the month
+        # branch must not jump at the 360/0 discontinuity.
+        assert plain._get_month_index(0, 359.9) == plain._get_month_index(0, 0.1)
+
+    def test_early_zi_belongs_to_new_day(self, plain):
+        # Engine convention, complement to test_late_zi_stays_on_same_day:
+        # 00:00-01:00 is Zi hour of the day that just began.
+        res = plain.get_coordinates(utc(2024, 1, 2, 0, 30), 0.0)
+        assert labels(res["coordinates"]["day"]) == "YiChou"
+        assert labels(res["coordinates"]["hour"]) == "BingZi"
