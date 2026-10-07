@@ -50,6 +50,11 @@ class TestConstruction:
         v = CyclicVariable(59)  # Gui-Hai
         assert (v.stem_index, v.branch_index) == (9, 11)
 
+    def test_index_property_returns_normalized_index(self):
+        assert CyclicVariable(0).index == 0
+        assert CyclicVariable(59).index == 59
+        assert CyclicVariable(119).index == 59
+
 
 class TestLabels:
     def test_english_labels(self):

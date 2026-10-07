@@ -83,20 +83,10 @@ class TemporalCoordinateEngine:
         # Current month stem
         month_stem_idx = (base_stem_idx + branch_offset_from_tiger) % 10
         
-        # Combine into Base-60 index (Stem-Branch)
-        # We need to find the index X where X%10==stem and X%12==branch
-        # Optimized lookup or simple search in 60-cycle
-        # Since stem/branch move together, index = (StemIndex - BranchIndex)/2 * 10 + Branch? 
-        # Easier robust way: find matching pair in Z_60
-        # (This is O(1) in concept, O(60) in brute implementation, but fast)
-        for i in range(60):
-            if i % 10 == month_stem_idx and i % 12 == month_branch_idx:
-                return i
-        # Stem/branch parity always matches by construction; reaching here
-        # means the "Five Tigers" inputs were inconsistent.
-        raise AssertionError(
-            f"No Z_60 index matches stem={month_stem_idx}, branch={month_branch_idx}"
-        )
+        # Combine into Base-60 index (Stem-Branch) via closed-form CRT lookup.
+        return CyclicVariable.from_stem_branch(
+            month_stem_idx, month_branch_idx
+        ).index
 
     def _get_day_index(self, solar_dt: datetime) -> int:
         """
@@ -129,18 +119,10 @@ class TemporalCoordinateEngine:
         # Formula: (DayStem % 5) * 2 + HourBranch
         hour_stem_idx = ((day_stem_idx % 5) * 2 + hour_branch_idx) % 10
 
-        # 3. Find Z_60 index
-        # Optimization: Hour pillar sequence is continuous.
-        # Index = (StartStemOfRat * 10) + HourBranch? No.
-        # Let's search Z_60 for robustness again.
-        for i in range(60):
-            if i % 10 == hour_stem_idx and i % 12 == hour_branch_idx:
-                return i
-        # Stem/branch parity always matches by construction; reaching here
-        # means the "Five Rats" inputs were inconsistent.
-        raise AssertionError(
-            f"No Z_60 index matches stem={hour_stem_idx}, branch={hour_branch_idx}"
-        )
+        # 3. Resolve the Z_60 index via closed-form CRT lookup.
+        return CyclicVariable.from_stem_branch(
+            hour_stem_idx, hour_branch_idx
+        ).index
 
     def get_coordinates(self, dt: datetime, longitude: float = 0.0) -> Dict[str, Any]:
             """

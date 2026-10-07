@@ -66,6 +66,11 @@ class CyclicVariable:
         return cls(stem_idx + 10 * k)
 
     @property
+    def index(self) -> int:
+        """Normalized position in Z_60, always in [0, 60)."""
+        return self._index
+
+    @property
     def stem_index(self) -> int:
         """Position in Z_10 (Heavenly Stems)."""
         return self._index % 10
