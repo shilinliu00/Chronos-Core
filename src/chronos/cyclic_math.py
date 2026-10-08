@@ -189,6 +189,10 @@ class CyclicVariable:
     def __repr__(self):
         return f"<CV({self._index}): {self.stem}{self.branch} ({self.stem_cn}{self.branch_cn})>"
 
+    def __str__(self):
+        """Chinese label, e.g. 甲子."""
+        return f"{self.stem_cn}{self.branch_cn}"
+
     def to_json(self) -> Dict:
         """Serialization for API responses."""
         return {

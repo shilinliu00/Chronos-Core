@@ -135,6 +135,10 @@ class TestIdentity:
     def test_repr(self):
         assert repr(CyclicVariable(0)) == "<CV(0): JiaZi (甲子)>"
 
+    def test_str_returns_chinese_label(self):
+        assert str(CyclicVariable(0)) == "甲子"
+        assert str(CyclicVariable(59)) == "癸亥"
+
 
 class TestNaYin:
     def test_table_has_thirty_entries(self):
