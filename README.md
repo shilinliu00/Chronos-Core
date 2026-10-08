@@ -74,6 +74,13 @@ nyc_longitude = -74.0060
 # 3. Extract 4-dimensional cyclic coordinates
 result = engine.get_coordinates(event_time, longitude=nyc_longitude)
 
+# 3b. Batch conversion: one result dict per input, in input order
+batch = engine.convert_many(
+    [datetime(2024, 1, 1, 12, tzinfo=timezone.utc),
+     datetime(2024, 6, 15, 12, tzinfo=timezone.utc)],
+    longitude=nyc_longitude,
+)
+
 print(result["metadata"]["solar_longitude_deg"])          # 315.26...
 print(result["coordinates"]["day"]["label_cn"])           # 戊戌
 print(result["coordinates"]["hour"]["stem"])              # Xin
