@@ -177,6 +177,22 @@ class TestPipeline:
             assert res["metadata"]["longitude"] == lon
 
 
+class TestBatchConversion:
+    def test_batch_matches_single_calls(self, plain):
+        dts = [utc(2024, 1, 1, 12, 0), utc(2024, 6, 15, 12, 0)]
+        batch = plain.convert_many(dts)
+        assert len(batch) == 2
+        assert batch[0]["coordinates"]["day"]["label_cn"] == "甲子"
+        assert batch[1] == plain.get_coordinates(dts[1], 0.0)
+
+    def test_batch_empty_input(self, plain):
+        assert plain.convert_many([]) == []
+
+    def test_batch_invalid_longitude_rejected(self, plain):
+        with pytest.raises(ValueError):
+            plain.convert_many([utc(2024, 1, 1, 12, 0)], 200.0)
+
+
 class TestBoundaries:
     def test_year_flips_exactly_at_315_degrees(self, plain):
         dt = utc(2024, 2, 4, 12, 0)

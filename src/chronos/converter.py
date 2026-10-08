@@ -177,3 +177,13 @@ class TemporalCoordinateEngine:
                     "hour": hour_pillar.to_json()
                 }
             }
+
+    def convert_many(self, dts, longitude: float = 0.0):
+        """
+        Converts a batch of UTC datetimes in one call.
+
+        :param dts: Iterable of input datetimes (UTC).
+        :param longitude: Observer's longitude for Solar Time correction.
+        :return: List of result dicts, one per input, in input order.
+        """
+        return [self.get_coordinates(dt, longitude) for dt in dts]
