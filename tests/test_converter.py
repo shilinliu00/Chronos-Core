@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import pytest
 
 from chronos.converter import TemporalCoordinateEngine
+from chronos.cyclic_math import CyclicVariable
 
 
 def utc(*args):
@@ -74,6 +75,19 @@ class TestYearPillar:
     def test_december_belongs_to_current_year(self, plain):
         idx = plain._get_year_index(utc(2024, 12, 15, 12, 0), 255.0)
         assert idx == 40
+
+    def test_year_1900_is_geng_zi(self, plain):
+        # 1900-02-05, after LiChun: 庚子年 (index 36). Exercise the
+        # negative-diff path of the (year - 1984) % 60 wrap.
+        idx = plain._get_year_index(utc(1900, 2, 5, 12, 0), 320.0)
+        assert idx == 36
+        assert labels(CyclicVariable(idx).to_json()) == "GengZi"
+
+    def test_1899_before_lichun_is_ji_hai(self, plain):
+        # 1900-01-15, before LiChun: belongs to 1899 = 己亥年 (index 35).
+        idx = plain._get_year_index(utc(1900, 1, 15, 12, 0), 300.0)
+        assert idx == 35
+        assert labels(CyclicVariable(idx).to_json()) == "JiHai"
 
 
 class TestMonthPillar:
