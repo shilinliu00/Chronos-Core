@@ -130,7 +130,12 @@ class TemporalCoordinateEngine:
         
             :param dt: Input datetime (UTC).
             :param longitude: Observer's longitude for Solar Time correction.
+            :raises ValueError: If longitude is outside [-180, 180] degrees.
             """
+            if not -180.0 <= longitude <= 180.0:
+                raise ValueError(
+                    f"longitude must be within [-180, 180], got {longitude}"
+                )
             # 1. Physics Layer: Adjust for True Solar Time (Critical for Hour Boundary)
             # Solar longitude is geocentric (location-independent), so it is always
             # computed exactly. The precise_mode flag only toggles the EoT/longitude

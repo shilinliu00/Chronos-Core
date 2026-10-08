@@ -165,6 +165,17 @@ class TestPipeline:
         res = plain.get_coordinates(datetime(2024, 1, 1, 12, 0), 0.0)
         assert labels(res["coordinates"]["day"]) == "JiaZi"
 
+    def test_longitude_outside_range_rejected(self, plain):
+        with pytest.raises(ValueError):
+            plain.get_coordinates(utc(2024, 1, 1, 12, 0), 181.0)
+        with pytest.raises(ValueError):
+            plain.get_coordinates(utc(2024, 1, 1, 12, 0), -180.1)
+
+    def test_longitude_endpoints_accepted(self, plain):
+        for lon in (-180.0, 180.0):
+            res = plain.get_coordinates(utc(2024, 1, 1, 12, 0), lon)
+            assert res["metadata"]["longitude"] == lon
+
 
 class TestBoundaries:
     def test_year_flips_exactly_at_315_degrees(self, plain):
