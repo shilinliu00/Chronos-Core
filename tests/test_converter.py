@@ -216,6 +216,14 @@ class TestBatchConversion:
     def test_batch_empty_input(self, plain):
         assert plain.convert_many([]) == []
 
+    def test_batch_accepts_generators(self, plain):
+        # The signature promises an Iterable, so one shot iterables
+        # (no len, no indexing) must work too.
+        gen = (utc(2024, 6, 15, 12, 0) for _ in range(2))
+        batch = plain.convert_many(gen)
+        single = plain.get_coordinates(utc(2024, 6, 15, 12, 0), 0.0)
+        assert batch == [single, single]
+
     def test_batch_invalid_longitude_rejected(self, plain):
         with pytest.raises(ValueError):
             plain.convert_many([utc(2024, 1, 1, 12, 0)], 200.0)
