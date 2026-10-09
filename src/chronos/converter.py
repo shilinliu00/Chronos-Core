@@ -11,7 +11,7 @@ Implements the classic algorithms:
 
 import math
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, Iterable, List
 
 from .cyclic_math import CyclicVariable
 from .astronomy import get_true_solar_time, calculate_solar_longitude, _to_utc
@@ -183,7 +183,7 @@ class TemporalCoordinateEngine:
                 }
             }
 
-    def convert_many(self, dts, longitude: float = 0.0):
+    def convert_many(self, dts: Iterable[datetime], longitude: float = 0.0) -> List[Dict[str, Any]]:
         """
         Converts a batch of UTC datetimes in one call.
 
