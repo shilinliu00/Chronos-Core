@@ -102,6 +102,14 @@ See `examples/quick_start.py` for the full runnable example.
 - `False`: pillars follow the UTC clock directly (no EoT correction).
   Useful for testing and for hand-verifiable expectations.
 
+### Input datetime convention
+
+`get_coordinates` expects a UTC datetime. Naive datetimes are assumed to
+be UTC; timezone-aware datetimes are converted to UTC before the
+pipeline runs, so passing local time (e.g. `+08:00`) can never shift the
+Day/Hour pillars by mistake. The `gregorian_utc` metadata field always
+reports the normalized UTC instant.
+
 ## 🧪 Testing
 
 ```bash
@@ -109,7 +117,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-64 tests, 99% coverage. Day-pillar anchors are cross-checked against
+74 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
