@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from .cyclic_math import CyclicVariable
-from .astronomy import get_true_solar_time, calculate_solar_longitude
+from .astronomy import get_true_solar_time, calculate_solar_longitude, _to_utc
 
 class TemporalCoordinateEngine:
     """
@@ -128,10 +128,15 @@ class TemporalCoordinateEngine:
             """
             Executes the conversion pipeline.
         
-            :param dt: Input datetime (UTC).
+            :param dt: Input datetime. Naive datetimes are assumed to be UTC;
+            aware datetimes are converted to UTC before the pipeline runs.
             :param longitude: Observer's longitude for Solar Time correction.
             :raises ValueError: If longitude is outside [-180, 180] degrees.
             """
+            # Normalize first: the astronomy layer already converts aware
+            # inputs, but the clock readings below (year/month/day/hour)
+            # would otherwise follow the input's local timezone.
+            dt = _to_utc(dt)
             if not -180.0 <= longitude <= 180.0:
                 raise ValueError(
                     f"longitude must be within [-180, 180], got {longitude}"

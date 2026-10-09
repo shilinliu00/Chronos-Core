@@ -6,7 +6,7 @@ rules: year changes at LiChun (立春), month branches at the solar terms,
 "Five Tigers" (五虎遁) month stems and "Five Rats" (五鼠遁) hour stems.
 """
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -178,6 +178,20 @@ class TestPipeline:
     def test_naive_datetime_accepted(self, plain):
         res = plain.get_coordinates(datetime(2024, 1, 1, 12, 0), 0.0)
         assert labels(res["coordinates"]["day"]) == "JiaZi"
+
+    def test_aware_non_utc_datetime_normalized_to_utc(self, plain, precise):
+        # 2024-01-01 07:30 +08:00 is 2023-12-31 23:30 UTC: a different day.
+        # The engine must read the UTC clock, not the input's local clock.
+        beijing = timezone(timedelta(hours=8))
+        aware = datetime(2024, 1, 1, 7, 30, tzinfo=beijing)
+        utc_equiv = datetime(2023, 12, 31, 23, 30, tzinfo=timezone.utc)
+        for engine in (plain, precise):
+            res = engine.get_coordinates(aware, 0.0)
+            assert res["coordinates"] == engine.get_coordinates(
+                utc_equiv, 0.0
+            )["coordinates"]
+            assert res["metadata"]["gregorian_utc"] == utc_equiv.isoformat()
+        assert labels(res["coordinates"]["day"]) == "GuiHai"  # 癸亥日, cf. 万年历
 
     def test_longitude_outside_range_rejected(self, plain):
         with pytest.raises(ValueError):
