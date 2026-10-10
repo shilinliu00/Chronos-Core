@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 J2000_EPOCH = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 MINUTES_PER_DEGREE_LONGITUDE = 4.0  # Earth rotates 1 degree every 4 minutes
 SECONDS_PER_DAY = 86400.0
+J2000_OBLIQUITY = 23.4393  # Mean obliquity of the ecliptic at J2000.0 (degrees)
 
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
@@ -67,6 +68,25 @@ def calculate_solar_longitude(dt: datetime) -> float:
     lambda_degrees = L + 1.915 * math.sin(g_radians) + 0.020 * math.sin(2.0 * g_radians)
     
     return lambda_degrees % 360.0
+
+def calculate_solar_declination(dt: datetime) -> float:
+    """
+    Calculates the Sun's declination (celestial latitude).
+
+    Standard formula (as used by the NOAA solar calculator):
+    δ = asin(sin ε · sin λ), where ε is the mean obliquity of the ecliptic
+    and λ is the apparent ecliptic longitude.
+
+    :param dt: UTC Datetime.
+    :return: Declination in degrees, within [-23.44, 23.44].
+    """
+    lambda_degrees = calculate_solar_longitude(dt)
+    sin_delta = (
+        math.sin(math.radians(J2000_OBLIQUITY))
+        * math.sin(math.radians(lambda_degrees))
+    )
+    # Clamp guards against |sin_delta| > 1 from floating point noise.
+    return math.degrees(math.asin(max(-1.0, min(1.0, sin_delta))))
 
 def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     """

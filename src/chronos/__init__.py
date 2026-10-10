@@ -10,6 +10,7 @@ from .cyclic_math import CyclicVariable
 from .astronomy import (
     calculate_equation_of_time,
     calculate_solar_longitude,
+    calculate_solar_declination,
     get_true_solar_time,
 )
 from .converter import TemporalCoordinateEngine
@@ -21,5 +22,6 @@ __all__ = [
     "TemporalCoordinateEngine",
     "calculate_equation_of_time",
     "calculate_solar_longitude",
+    "calculate_solar_declination",
     "get_true_solar_time",
 ]

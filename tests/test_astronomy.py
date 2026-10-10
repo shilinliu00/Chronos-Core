@@ -6,6 +6,7 @@ import pytest
 from chronos.astronomy import (
     calculate_equation_of_time,
     calculate_solar_longitude,
+    calculate_solar_declination,
     get_true_solar_time,
     _to_utc,
 )
@@ -35,6 +36,31 @@ class TestSolarLongitude:
     def test_output_range(self):
         lam = calculate_solar_longitude(utc(2024, 7, 4, 12, 0))
         assert 0.0 <= lam < 360.0
+
+
+class TestSolarDeclination:
+    def test_solstice_extrema(self):
+        # Sun at its highest/lowest celestial latitude on the solstices.
+        assert calculate_solar_declination(utc(2024, 6, 20, 20, 51)) == pytest.approx(
+            23.4393, abs=0.1
+        )
+        assert calculate_solar_declination(utc(2024, 12, 21, 9, 20)) == pytest.approx(
+            -23.4393, abs=0.1
+        )
+
+    def test_equinox_crosses_equator(self):
+        # On the equinox the Sun crosses the celestial equator: δ ≈ 0.
+        assert calculate_solar_declination(utc(2024, 3, 20, 3, 6)) == pytest.approx(
+            0.0, abs=0.1
+        )
+        assert calculate_solar_declination(utc(2024, 9, 22, 12, 44)) == pytest.approx(
+            0.0, abs=0.1
+        )
+
+    def test_bounded_all_year(self):
+        for month in range(1, 13):
+            delta = calculate_solar_declination(utc(2024, month, 15, 12, 0))
+            assert -23.45 <= delta <= 23.45
 
     def test_monotonic_increase_over_a_day(self):
         a = calculate_solar_longitude(utc(2024, 6, 1, 0, 0))

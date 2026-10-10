@@ -23,6 +23,7 @@ Standard `datetime` libraries assume a linear progression of time and rely on ad
 Chronos-Core calculates absolute Earth-Sun orbital mechanics to define strict temporal boundaries:
 * **Equation of Time (EoT):** Corrects the discrepancy between Mean Solar Time (clock) and Apparent Solar Time (sundial) caused by Earth's orbital eccentricity. Essential for sub-hour precision during temporal boundary transitions.
 * **Solar Ecliptic Longitude ($\lambda$):** Computes exact solar positioning relative to the J2000.0 epoch. The annual cycle strictly resets at $\lambda = 315^\circ$ (Vernal Equinox indicator), dynamically resolving the "Year Boundary" edge cases.
+* **Solar Declination ($\delta$):** Derives the Sun's celestial latitude from $\lambda$ via $\delta = \arcsin(\sin\varepsilon \cdot \sin\lambda)$, with the J2000 mean obliquity $\varepsilon = 23.4393^\circ$. Available as `calculate_solar_declination` for seasonal boundary diagnostics.
 
 ### 2. $\mathbb{Z}_{60}$ Modular Arithmetic Engine
 Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
@@ -41,7 +42,7 @@ The library is designed with strict Separation of Concerns (SoC):
 
 | Module | Description | Design Pattern / Focus |
 | :--- | :--- | :--- |
-| `astronomy.py` | Physics engine. Calculates EoT and solar longitude $\lambda$. | Pure functions, stateless scientific computing. |
+| `astronomy.py` | Physics engine. Calculates EoT, solar longitude $\lambda$, and solar declination $\delta$. | Pure functions, stateless scientific computing. |
 | `cyclic_math.py` | Mathematical kernel. Defines the `CyclicVariable` class. | Memory optimization (`__slots__`), Operator Overloading. |
 | `converter.py` | The main integration layer. Maps physics to cyclic vectors. | Factory Pattern, Dependency Injection ready. |
 
