@@ -42,10 +42,11 @@ def calculate_equation_of_time(day_of_year: int) -> float:
 
 def calculate_solar_longitude(dt: datetime) -> float:
     """
-    Calculates the Apparent Solar Ecliptic Longitude (Lambda).
+    Calculates the geometric Solar Ecliptic Longitude (Lambda).
     Crucial for determining Solar Terms (JieQi) for Month Pillar switching.
-    
-    Algorithm simplified from VSOP87 for moderate precision.
+
+    Simplified from VSOP87 for moderate precision. Nutation and aberration
+    are not applied, so this is geometric longitude rather than apparent.
     
     :param dt: UTC Datetime.
     :return: Degrees (0.0 - 360.0), where 0 is Vernal Equinox.
