@@ -24,7 +24,12 @@ def calculate_equation_of_time(day_of_year: int) -> float:
 
     :param day_of_year: The nth day of the year (1-366).
     :return: Time correction in minutes (positive means Sun is fast).
+    :raises ValueError: If day_of_year is outside [1, 366].
     """
+    if not 1 <= day_of_year <= 366:
+        raise ValueError(
+            f"day_of_year must be in [1, 366], got {day_of_year}"
+        )
     # B parameter approximation (Smart, 1977)
     # B represents the mean anomaly of the Earth relative to the perihelion.
     B = 2.0 * math.pi * (day_of_year - 81) / 365.0

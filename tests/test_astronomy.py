@@ -56,6 +56,15 @@ class TestEquationOfTime:
         for doy in range(1, 367):
             assert -17.0 < calculate_equation_of_time(doy) < 17.0
 
+    def test_out_of_range_day_rejected(self):
+        for bad in (0, -3, 367, 400):
+            with pytest.raises(ValueError):
+                calculate_equation_of_time(bad)
+
+    def test_year_endpoints_accepted(self):
+        assert calculate_equation_of_time(1) == pytest.approx(-3.7, abs=1.0)
+        assert calculate_equation_of_time(366) == pytest.approx(-3.7, abs=1.0)
+
 
 class TestTrueSolarTime:
     def test_greenwich_gets_eot_only(self):
