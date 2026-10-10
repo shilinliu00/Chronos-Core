@@ -15,6 +15,7 @@ from typing import Dict, Any, Iterable, List
 
 from .cyclic_math import CyclicVariable
 from .astronomy import get_true_solar_time, calculate_solar_longitude, _to_utc
+from .astronomy import calculate_solar_declination
 
 class TemporalCoordinateEngine:
     """
@@ -173,6 +174,7 @@ class TemporalCoordinateEngine:
                     "gregorian_utc": dt.isoformat(),
                     "true_solar_time": solar_dt.isoformat(),
                     "solar_longitude_deg": round(solar_lambda, 4),
+                    "solar_declination_deg": round(calculate_solar_declination(dt), 4),
                     "longitude": longitude
                 },
                 "coordinates": {

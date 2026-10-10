@@ -159,6 +159,18 @@ class TestPipeline:
         assert set(res) == {"metadata", "coordinates"}
         assert set(res["coordinates"]) == {"year", "month", "day", "hour"}
 
+    def test_metadata_reports_solar_declination(self, plain):
+        # Near the June solstice the Sun is at max declination (~+23.44);
+        # near the December solstice it is at the minimum.
+        summer = plain.get_coordinates(utc(2024, 6, 20, 12, 0), 0.0)
+        winter = plain.get_coordinates(utc(2024, 12, 21, 12, 0), 0.0)
+        assert summer["metadata"]["solar_declination_deg"] == pytest.approx(
+            23.44, abs=0.1
+        )
+        assert winter["metadata"]["solar_declination_deg"] == pytest.approx(
+            -23.44, abs=0.1
+        )
+
     def test_precise_mode_shifts_hour_by_longitude(self, precise, plain):
         # 120E at 00:30 UTC: true solar time ≈ 08:26 -> Chen hour;
         # uncorrected clock stays at 00:30 -> Zi hour.
