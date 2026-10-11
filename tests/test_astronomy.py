@@ -37,6 +37,19 @@ class TestSolarLongitude:
         lam = calculate_solar_longitude(utc(2024, 7, 4, 12, 0))
         assert 0.0 <= lam < 360.0
 
+    def test_naive_and_aware_inputs_agree(self):
+        # 2024-06-01 20:00 in Beijing (+08:00) is 12:00 UTC; the pure
+        # astronomy functions must not care which spelling was passed.
+        beijing = timezone(timedelta(hours=8))
+        aware = datetime(2024, 6, 1, 20, 0, tzinfo=beijing)
+        naive = datetime(2024, 6, 1, 12, 0)
+        assert calculate_solar_longitude(aware) == pytest.approx(
+            calculate_solar_longitude(naive)
+        )
+        assert calculate_solar_declination(aware) == pytest.approx(
+            calculate_solar_declination(naive)
+        )
+
 
 class TestSolarDeclination:
     def test_solstice_extrema(self):
