@@ -4,7 +4,7 @@ Description: Implements Base-60 (Sexagenary) cyclic arithmetic and data structur
 This module handles the non-decimal temporal coordinates used in the engine.
 """
 
-from typing import Union, Dict
+from typing import Union, Dict, Any
 
 class CyclicVariable:
     """
@@ -193,7 +193,7 @@ class CyclicVariable:
         """Chinese label, e.g. 甲子."""
         return f"{self.stem_cn}{self.branch_cn}"
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> Dict[str, Any]:
         """Serialization for API responses."""
         return {
             "index": self._index,
