@@ -76,7 +76,7 @@ def calculate_solar_declination(dt: datetime) -> float:
 
     Standard formula (as used by the NOAA solar calculator):
     δ = asin(sin ε · sin λ), where ε is the mean obliquity of the ecliptic
-    and λ is the apparent ecliptic longitude.
+    and λ is the geometric ecliptic longitude from calculate_solar_longitude.
 
     :param dt: UTC Datetime.
     :return: Declination in degrees, within [-23.44, 23.44].
