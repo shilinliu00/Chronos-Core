@@ -171,6 +171,14 @@ class TestPipeline:
             -23.44, abs=0.1
         )
 
+    def test_precise_mode_day_follows_solar_time_past_midnight(self, precise, plain):
+        # 2024-01-01 15:30 UTC at 180E: true solar time is already Jan 2
+        # (~03:26), so the day pillar rolls to YiChou; uncorrected mode
+        # keeps the UTC calendar day JiaZi.
+        dt = utc(2024, 1, 1, 15, 30)
+        assert labels(precise.get_coordinates(dt, 180.0)["coordinates"]["day"]) == "YiChou"
+        assert labels(plain.get_coordinates(dt, 180.0)["coordinates"]["day"]) == "JiaZi"
+
     def test_precise_mode_shifts_hour_by_longitude(self, precise, plain):
         # 120E at 00:30 UTC: true solar time ≈ 08:26 -> Chen hour;
         # uncorrected clock stays at 00:30 -> Zi hour.
