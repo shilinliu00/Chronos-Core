@@ -276,6 +276,11 @@ class TestBoundaries:
         assert plain._get_month_index(0, 344.99) == 2   # Bing-Yin
         assert plain._get_month_index(0, 345.0) == 3    # Ding-Mao
 
+    def test_month_flips_exactly_at_285_degrees(self, plain):
+        # XiaoHan: Zi month ends, Chou month begins (Jia year).
+        assert plain._get_month_index(0, 284.99) == 12   # Bing-Zi
+        assert plain._get_month_index(0, 285.0) == 13    # Ding-Chou
+
     def test_month_consistent_across_degree_wrap(self, plain):
         # 359.9 deg and 0.1 deg are adjacent on the circle; the month
         # branch must not jump at the 360/0 discontinuity.
