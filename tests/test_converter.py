@@ -12,6 +12,7 @@ import pytest
 
 from chronos.converter import TemporalCoordinateEngine
 from chronos.cyclic_math import CyclicVariable
+from chronos.astronomy import calculate_equation_of_time
 
 
 def utc(*args):
@@ -170,6 +171,15 @@ class TestPipeline:
         assert winter["metadata"]["solar_declination_deg"] == pytest.approx(
             -23.44, abs=0.1
         )
+
+    def test_metadata_reports_equation_of_time(self, plain):
+        # The metadata value must equal the astronomy function for the
+        # UTC day of the input, regardless of the correction mode.
+        dt = utc(2024, 2, 4, 12, 0)
+        expected = round(calculate_equation_of_time(dt.timetuple().tm_yday), 3)
+        assert plain.get_coordinates(dt, 0.0)["metadata"][
+            "equation_of_time_minutes"
+        ] == expected
 
     def test_precise_mode_day_follows_solar_time_past_midnight(self, precise, plain):
         # 2024-01-01 15:30 UTC at 180E: true solar time is already Jan 2
