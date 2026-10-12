@@ -83,6 +83,8 @@ batch = engine.convert_many(
 )
 
 print(result["metadata"]["solar_longitude_deg"])          # 315.26...
+print(result["metadata"]["solar_declination_deg"])         # -16.29...
+print(result["metadata"]["equation_of_time_minutes"])      # -14.092
 print(result["coordinates"]["day"]["label_cn"])           # 戊戌
 print(result["coordinates"]["hour"]["stem"])              # Xin
 

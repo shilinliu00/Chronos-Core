@@ -13,6 +13,7 @@ result = engine.get_coordinates(event_time, longitude=nyc_longitude)
 
 print(f"Solar Longitude: {result['metadata']['solar_longitude_deg']}°")
 print(f"True Solar Time: {result['metadata']['true_solar_time']}")
+print(f"Equation of Time: {result['metadata']['equation_of_time_minutes']} min")
 print(f"Base-60 Day Coordinate: {result['coordinates']['day']['stem']}-{result['coordinates']['day']['branch']}")
 
 # 4. O(1) Relational Computation Example
