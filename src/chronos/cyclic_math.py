@@ -156,13 +156,13 @@ class CyclicVariable:
         # Sum of indices is 1, 13, 25... -> (sum % 12) == 1
         return (self.branch_index + other.branch_index) % 12 == 1
 
-    def __add__(self, other: int):
+    def __add__(self, other: int) -> 'CyclicVariable':
         """Supports temporal shifting (e.g., next year -> current + 1)."""
         if isinstance(other, int):
             return CyclicVariable(self._index + other)
         raise TypeError("Can only add integers (time deltas) to CyclicVariable")
 
-    def __sub__(self, other: Union['CyclicVariable', int]):
+    def __sub__(self, other: Union['CyclicVariable', int]) -> Union['CyclicVariable', int]:
         """
         Supports calculating temporal distance or shifting backwards.
         - If other is CyclicVariable: Returns distance in the cycle (int).
@@ -176,13 +176,13 @@ class CyclicVariable:
             return CyclicVariable(self._index - other)
         raise TypeError("Unsupported type for subtraction")
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Enables equality checks (e.g., if day1 == day2)."""
         if isinstance(other, CyclicVariable):
             return self._index == other._index
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Enables use of CyclicVariable as dictionary keys or in sets."""
         return hash(self._index)
 
