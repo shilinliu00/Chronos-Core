@@ -55,6 +55,12 @@ class TestDayPillar:
         # 1900-01-01 = 甲戌 (index 10); must agree with the 2024 anchor.
         assert plain._get_day_index(utc(1900, 1, 1)) == 10
 
+    def test_continuous_before_reference_epoch(self, plain):
+        # The count must run backward cleanly through the negative
+        # timedelta path: 1899-12-31 = 癸酉 (index 9), 1899-12-30 = 壬申.
+        assert plain._get_day_index(utc(1899, 12, 31, 12, 0)) == 9
+        assert plain._get_day_index(utc(1899, 12, 30, 12, 0)) == 8
+
 
 class TestYearPillar:
     def test_before_lichun_stays_previous_year(self, plain):
