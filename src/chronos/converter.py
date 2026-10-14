@@ -10,7 +10,7 @@ Implements the classic algorithms:
 """
 
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Iterable, List
 
 from .cyclic_math import CyclicVariable
@@ -196,3 +196,16 @@ class TemporalCoordinateEngine:
         :return: List of result dicts, one per input, in input order.
         """
         return [self.get_coordinates(dt, longitude) for dt in dts]
+
+    def get_coordinates_from_timestamp(self, ts: float, longitude: float = 0.0) -> Dict[str, Any]:
+        """
+        Converts a Unix timestamp in one call.
+
+        :param ts: Seconds since 1970-01-01T00:00:00Z; negative values
+        select dates before the epoch.
+        :param longitude: Observer's longitude for Solar Time correction.
+        :return: Same result dict as get_coordinates.
+        """
+        return self.get_coordinates(
+            datetime.fromtimestamp(ts, tz=timezone.utc), longitude
+        )

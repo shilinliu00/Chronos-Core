@@ -241,6 +241,25 @@ class TestPipeline:
             assert res["metadata"]["longitude"] == lon
 
 
+class TestTimestampInput:
+    def test_timestamp_matches_datetime_path(self, plain):
+        # 2024-01-01 12:00 UTC as a Unix timestamp.
+        ts = 1704110400.0
+        assert plain.get_coordinates_from_timestamp(ts, 0.0) == plain.get_coordinates(
+            utc(2024, 1, 1, 12, 0), 0.0
+        )
+
+    def test_negative_timestamp_before_epoch(self, plain):
+        # Pre 1970 dates have negative timestamps; the conversion must
+        # agree with the datetime path (here: 1899-12-31 = GuiYou day).
+        dt = utc(1899, 12, 31, 12, 0)
+        ts = dt.timestamp()
+        assert ts < 0
+        single = plain.get_coordinates(dt, 0.0)
+        assert plain.get_coordinates_from_timestamp(ts, 0.0) == single
+        assert labels(single["coordinates"]["day"]) == "GuiYou"
+
+
 class TestBatchConversion:
     def test_batch_matches_single_calls(self, plain):
         dts = [utc(2024, 1, 1, 12, 0), utc(2024, 6, 15, 12, 0)]
