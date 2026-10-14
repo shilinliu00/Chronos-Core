@@ -176,7 +176,7 @@ class CyclicVariable:
             return CyclicVariable(self._index - other)
         raise TypeError("Unsupported type for subtraction")
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Enables equality checks (e.g., if day1 == day2)."""
         if isinstance(other, CyclicVariable):
             return self._index == other._index
@@ -186,10 +186,10 @@ class CyclicVariable:
         """Enables use of CyclicVariable as dictionary keys or in sets."""
         return hash(self._index)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<CV({self._index}): {self.stem}{self.branch} ({self.stem_cn}{self.branch_cn})>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Chinese label, e.g. 甲子."""
         return f"{self.stem_cn}{self.branch_cn}"
 
