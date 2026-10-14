@@ -281,6 +281,18 @@ class TestBoundaries:
         assert plain._get_month_index(0, 284.99) == 12   # Bing-Zi
         assert plain._get_month_index(0, 285.0) == 13    # Ding-Chou
 
+    def test_five_tigers_table_for_jia_year(self, plain):
+        # "Jia Ji zhi nian Bing zuo shou": for a Jia year stem the Tiger
+        # month is Bing-Yin and the stems advance one per 30 degree
+        # segment, wrapping through the 360/0 discontinuity.
+        expected = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        got = [plain._get_month_index(0, 315 + 30 * k + 15) for k in range(12)]
+        assert got == expected
+        assert [labels(CyclicVariable(i).to_json()) for i in got] == [
+            "BingYin", "DingMao", "WuChen", "JiSi", "GengWu", "XinWei",
+            "RenShen", "GuiYou", "JiaXu", "YiHai", "BingZi", "DingChou",
+        ]
+
     def test_month_consistent_across_degree_wrap(self, plain):
         # 359.9 deg and 0.1 deg are adjacent on the circle; the month
         # branch must not jump at the 360/0 discontinuity.
