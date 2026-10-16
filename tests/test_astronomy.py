@@ -132,6 +132,21 @@ class TestTrueSolarTime:
             utc(2024, 6, 1, 12, 0), 0.0
         )
 
+    def test_out_of_range_longitude_rejected(self):
+        dt = utc(2024, 6, 1, 12, 0)
+        for bad in (180.1, -180.1, 360.0):
+            with pytest.raises(ValueError):
+                get_true_solar_time(dt, bad)
+
+    def test_longitude_endpoints_shift_exactly_12_hours(self):
+        # +/-180 degrees is the farthest a location can be from Greenwich.
+        dt = utc(2024, 6, 1, 12, 0)
+        east = get_true_solar_time(dt, 180.0)
+        west = get_true_solar_time(dt, -180.0)
+        greenwich = get_true_solar_time(dt, 0.0)
+        assert (east - greenwich) == timedelta(minutes=720)
+        assert (greenwich - west) == timedelta(minutes=720)
+
 
 class TestToUtc:
     def test_naive_assumed_utc(self):
