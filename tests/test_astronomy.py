@@ -80,6 +80,14 @@ class TestSolarDeclination:
         b = calculate_solar_longitude(utc(2024, 6, 2, 0, 0))
         assert 0.9 < (b - a) < 1.1  # ~0.986 deg/day
 
+    def test_microsecond_inputs_give_distinct_longitudes(self):
+        # The kernel claims microsecond precision via total_seconds();
+        # shifting by one microsecond must move the longitude forward.
+        t = utc(2024, 6, 1, 12, 0, 0, 123456)
+        a = calculate_solar_longitude(t)
+        b = calculate_solar_longitude(t + timedelta(microseconds=1))
+        assert b > a
+
 
 class TestEquationOfTime:
     def test_known_extrema(self):
