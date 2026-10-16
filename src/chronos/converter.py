@@ -126,66 +126,66 @@ class TemporalCoordinateEngine:
         ).index
 
     def get_coordinates(self, dt: datetime, longitude: float = 0.0) -> Dict[str, Any]:
-            """
-            Executes the conversion pipeline.
-        
-            :param dt: Input datetime. Naive datetimes are assumed to be UTC;
-            aware datetimes are converted to UTC before the pipeline runs.
-            :param longitude: Observer's longitude for Solar Time correction.
-            :raises ValueError: If longitude is outside [-180, 180] degrees.
-            """
-            # Normalize first: the astronomy layer already converts aware
-            # inputs, but the clock readings below (year/month/day/hour)
-            # would otherwise follow the input's local timezone.
-            dt = _to_utc(dt)
-            if not -180.0 <= longitude <= 180.0:
-                raise ValueError(
-                    f"longitude must be within [-180, 180], got {longitude}"
-                )
-            # 1. Physics Layer: Adjust for True Solar Time (Critical for Hour Boundary)
-            # Solar longitude is geocentric (location-independent), so it is always
-            # computed exactly. The precise_mode flag only toggles the EoT/longitude
-            # correction applied to the clock time itself (which drives Day/Hour).
-            solar_lambda = calculate_solar_longitude(dt)
-            eot_minutes = calculate_equation_of_time(dt.timetuple().tm_yday)
-            if self.precise_mode:
-                solar_dt = get_true_solar_time(dt, longitude)
-            else:
-                solar_dt = dt
+        """
+        Executes the conversion pipeline.
 
-            # 2. Mathematical Layer: Calculate Indices
-            # A. Day (Base for Hour)
-            day_idx = self._get_day_index(solar_dt)
-            day_pillar = CyclicVariable(day_idx)
+        :param dt: Input datetime. Naive datetimes are assumed to be UTC;
+        aware datetimes are converted to UTC before the pipeline runs.
+        :param longitude: Observer's longitude for Solar Time correction.
+        :raises ValueError: If longitude is outside [-180, 180] degrees.
+        """
+        # Normalize first: the astronomy layer already converts aware
+        # inputs, but the clock readings below (year/month/day/hour)
+        # would otherwise follow the input's local timezone.
+        dt = _to_utc(dt)
+        if not -180.0 <= longitude <= 180.0:
+            raise ValueError(
+                f"longitude must be within [-180, 180], got {longitude}"
+            )
+        # 1. Physics Layer: Adjust for True Solar Time (Critical for Hour Boundary)
+        # Solar longitude is geocentric (location-independent), so it is always
+        # computed exactly. The precise_mode flag only toggles the EoT/longitude
+        # correction applied to the clock time itself (which drives Day/Hour).
+        solar_lambda = calculate_solar_longitude(dt)
+        eot_minutes = calculate_equation_of_time(dt.timetuple().tm_yday)
+        if self.precise_mode:
+            solar_dt = get_true_solar_time(dt, longitude)
+        else:
+            solar_dt = dt
 
-            # B. Year (Base for Month)
-            year_idx = self._get_year_index(solar_dt, solar_lambda)
-            year_pillar = CyclicVariable(year_idx)
+        # 2. Mathematical Layer: Calculate Indices
+        # A. Day (Base for Hour)
+        day_idx = self._get_day_index(solar_dt)
+        day_pillar = CyclicVariable(day_idx)
 
-            # C. Month (Derived from Year + Solar Term)
-            month_idx = self._get_month_index(year_pillar.stem_index, solar_lambda)
-            month_pillar = CyclicVariable(month_idx)
+        # B. Year (Base for Month)
+        year_idx = self._get_year_index(solar_dt, solar_lambda)
+        year_pillar = CyclicVariable(year_idx)
 
-            # D. Hour (Derived from Day + Solar Time)
-            hour_idx = self._get_hour_index(day_pillar.stem_index, solar_dt.hour)
-            hour_pillar = CyclicVariable(hour_idx)
-        
-            return {
-                "metadata": {
-                    "gregorian_utc": dt.isoformat(),
-                    "true_solar_time": solar_dt.isoformat(),
-                    "solar_longitude_deg": round(solar_lambda, 4),
-                    "solar_declination_deg": round(calculate_solar_declination(dt), 4),
-                    "equation_of_time_minutes": round(eot_minutes, 3),
-                    "longitude": longitude
-                },
-                "coordinates": {
-                    "year": year_pillar.to_json(),
-                    "month": month_pillar.to_json(),
-                    "day": day_pillar.to_json(),
-                    "hour": hour_pillar.to_json()
-                }
+        # C. Month (Derived from Year + Solar Term)
+        month_idx = self._get_month_index(year_pillar.stem_index, solar_lambda)
+        month_pillar = CyclicVariable(month_idx)
+
+        # D. Hour (Derived from Day + Solar Time)
+        hour_idx = self._get_hour_index(day_pillar.stem_index, solar_dt.hour)
+        hour_pillar = CyclicVariable(hour_idx)
+    
+        return {
+            "metadata": {
+                "gregorian_utc": dt.isoformat(),
+                "true_solar_time": solar_dt.isoformat(),
+                "solar_longitude_deg": round(solar_lambda, 4),
+                "solar_declination_deg": round(calculate_solar_declination(dt), 4),
+                "equation_of_time_minutes": round(eot_minutes, 3),
+                "longitude": longitude
+            },
+            "coordinates": {
+                "year": year_pillar.to_json(),
+                "month": month_pillar.to_json(),
+                "day": day_pillar.to_json(),
+                "hour": hour_pillar.to_json()
             }
+        }
 
     def convert_many(self, dts: Iterable[datetime], longitude: float = 0.0) -> List[Dict[str, Any]]:
         """

@@ -1,3 +1,11 @@
+"""
+Module: astronomy.py
+Description: Astronomical physics kernel for Chronos-Core.
+Computes the Equation of Time, geometric solar ecliptic longitude
+(lambda), and solar declination (delta) used to define strict
+temporal boundaries (solar terms) for the cyclic coordinates.
+"""
+
 import math
 from datetime import datetime, timedelta, timezone
 
@@ -99,7 +107,8 @@ def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     
     :param dt: Input datetime (UTC).
     :param longitude: Observer's longitude (East positive, West negative).
-    :return: Adjusted Datetime object representing True Solar Time.
+    :return: Naive datetime representing Local Apparent Solar Time at that
+        location (tzinfo is stripped because the value is no longer UTC).
     """
     dt_utc = _to_utc(dt)
     
@@ -114,8 +123,4 @@ def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     # 3. Apply Total Offset
     total_offset = timedelta(minutes=geo_offset_minutes + eot_minutes)
     solar_time = dt_utc + total_offset
-    
-    # Note: The result is conceptually "Solar Time" at that location.
-    # We strip tzinfo in the final step or keep it as reference depending on downstream needs.
-    # Here we return a naive datetime implied to be local solar time.
     return solar_time.replace(tzinfo=None)
