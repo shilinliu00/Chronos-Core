@@ -83,6 +83,8 @@ batch = engine.convert_many(
 )
 
 print(result["metadata"]["solar_longitude_deg"])          # 315.26...
+print(result["metadata"]["solar_term"])                  # LiChun
+print(result["metadata"]["solar_term_cn"])               # 立春
 print(result["metadata"]["solar_declination_deg"])         # -16.29...
 print(result["metadata"]["equation_of_time_minutes"])      # -14.092
 print(result["coordinates"]["day"]["label_cn"])           # 戊戌
@@ -120,7 +122,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-91 tests, 99% coverage. Day-pillar anchors are cross-checked against
+99 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema

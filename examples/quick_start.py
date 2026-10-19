@@ -12,6 +12,7 @@ nyc_longitude = -74.0060
 result = engine.get_coordinates(event_time, longitude=nyc_longitude)
 
 print(f"Solar Longitude: {result['metadata']['solar_longitude_deg']}°")
+print(f"Solar Term: {result['metadata']['solar_term_cn']} ({result['metadata']['solar_term']})")
 print(f"True Solar Time: {result['metadata']['true_solar_time']}")
 print(f"Equation of Time: {result['metadata']['equation_of_time_minutes']} min")
 print(f"Base-60 Day Coordinate: {result['coordinates']['day']['stem']}-{result['coordinates']['day']['branch']}")
