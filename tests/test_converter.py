@@ -13,6 +13,7 @@ import pytest
 from chronos.converter import TemporalCoordinateEngine
 from chronos.cyclic_math import CyclicVariable
 from chronos.astronomy import calculate_equation_of_time
+from chronos.astronomy import solar_term_for_longitude
 
 
 def utc(*args):
@@ -344,6 +345,16 @@ class TestBoundaries:
         # 359.9 deg and 0.1 deg are adjacent on the circle; the month
         # branch must not jump at the 360/0 discontinuity.
         assert plain._get_month_index(0, 359.9) == plain._get_month_index(0, 0.1)
+
+    def test_jie_terms_agree_with_month_branches(self, plain):
+        # The 12 Jie (节) terms start at 315 + 30k deg; at each of them the
+        # month branch for a Jia year must be Tiger + k, tying the term
+        # table to the month pillar math across the two modules.
+        for k in range(12):
+            lon = (315.0 + 30.0 * k) % 360.0
+            term_en, _ = solar_term_for_longitude(lon)
+            branch = plain._get_month_index(0, lon) % 12
+            assert branch == (2 + k) % 12, (term_en, lon)
 
     def test_early_zi_belongs_to_new_day(self, plain):
         # Engine convention, complement to test_late_zi_stays_on_same_day:
