@@ -157,6 +157,22 @@ class TestHourPillar:
         assert res["coordinates"]["hour"]["branch"] == "Zi"
 
 
+class TestSolarTermMetadata:
+    def test_metadata_names_current_solar_term(self, plain):
+        # 2024-03-10: past JingZhe (345 deg) -> 惊蛰.
+        res = plain.get_coordinates(utc(2024, 3, 10, 12, 0), 0.0)
+        assert res["metadata"]["solar_term"] == "JingZhe"
+        assert res["metadata"]["solar_term_cn"] == "惊蛰"
+
+    def test_solar_term_tracks_lichun_boundary(self, precise):
+        # Same fence posts as the year boundary test: before the true
+        # 2024 LiChun moment it is still DaHan, after it is LiChun.
+        before = precise.get_coordinates(utc(2024, 2, 4, 7, 0), 0.0)
+        after = precise.get_coordinates(utc(2024, 2, 4, 10, 0), 0.0)
+        assert before["metadata"]["solar_term"] == "DaHan"
+        assert after["metadata"]["solar_term"] == "LiChun"
+
+
 class TestPipeline:
     def test_full_chart_2024_01_01(self, plain):
         res = plain.get_coordinates(utc(2024, 1, 1, 12, 0), 0.0)
