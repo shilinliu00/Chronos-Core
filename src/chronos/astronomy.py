@@ -15,6 +15,42 @@ MINUTES_PER_DEGREE_LONGITUDE = 4.0  # Earth rotates 1 degree every 4 minutes
 SECONDS_PER_DAY = 86400.0
 J2000_OBLIQUITY = 23.4393  # Mean obliquity of the ecliptic at J2000.0 (degrees)
 
+# The 24 Solar Terms (二十四节气), ordered from the engine's annual reset
+# point: LiChun (Start of Spring) at 315 degrees ecliptic longitude. Each
+# term spans a 15 degree segment; the 12 "Jie" (节) terms spaced 30 degrees
+# apart are exactly the month pillar boundaries in converter.py.
+SOLAR_TERMS = [
+    ("LiChun", "立春"), ("YuShui", "雨水"), ("JingZhe", "惊蛰"),
+    ("ChunFen", "春分"), ("QingMing", "清明"), ("GuYu", "谷雨"),
+    ("LiXia", "立夏"), ("XiaoMan", "小满"), ("MangZhong", "芒种"),
+    ("XiaZhi", "夏至"), ("XiaoShu", "小暑"), ("DaShu", "大暑"),
+    ("LiQiu", "立秋"), ("ChuShu", "处暑"), ("BaiLu", "白露"),
+    ("QiuFen", "秋分"), ("HanLu", "寒露"), ("ShuangJiang", "霜降"),
+    ("LiDong", "立冬"), ("XiaoXue", "小雪"), ("DaXue", "大雪"),
+    ("DongZhi", "冬至"), ("XiaoHan", "小寒"), ("DaHan", "大寒"),
+]
+
+
+def solar_term_for_longitude(lon_degrees: float) -> tuple:
+    """
+    Names the solar term (节气) in force at a given ecliptic longitude.
+
+    Term k begins at (315 + 15k) degrees, so the index is
+    int(((lon - 315) % 360) / 15). The 12 Jie terms (even spacing of
+    30 degrees) line up with the month branch boundaries computed in
+    converter.py, which counts month offsets from LiChun the same way.
+
+    :param lon_degrees: Solar ecliptic longitude in [0, 360).
+    :return: (english_name, chinese_name) of the current term.
+    :raises ValueError: If longitude is outside [0, 360).
+    """
+    if not 0.0 <= lon_degrees < 360.0:
+        raise ValueError(
+            f"longitude must be in [0, 360), got {lon_degrees}"
+        )
+    idx = int(((lon_degrees - 315.0) % 360.0) / 15.0)
+    return SOLAR_TERMS[idx]
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

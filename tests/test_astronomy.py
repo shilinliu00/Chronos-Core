@@ -8,6 +8,8 @@ from chronos.astronomy import (
     calculate_solar_longitude,
     calculate_solar_declination,
     get_true_solar_time,
+    solar_term_for_longitude,
+    SOLAR_TERMS,
     _to_utc,
 )
 
@@ -154,6 +156,46 @@ class TestTrueSolarTime:
         greenwich = get_true_solar_time(dt, 0.0)
         assert (east - greenwich) == timedelta(minutes=720)
         assert (greenwich - west) == timedelta(minutes=720)
+
+
+class TestSolarTerms:
+    def test_table_has_twenty_four_entries(self):
+        assert len(SOLAR_TERMS) == 24
+        assert SOLAR_TERMS[0] == ("LiChun", "立春")
+        assert SOLAR_TERMS[3] == ("ChunFen", "春分")
+        assert SOLAR_TERMS[23] == ("DaHan", "大寒")
+
+    def test_each_term_begins_at_315_plus_15k(self):
+        # Term k owns the 15 degree segment starting at 315 + 15k.
+        for k, expected in enumerate(SOLAR_TERMS):
+            lon = (315.0 + 15.0 * k) % 360.0
+            assert solar_term_for_longitude(lon) == expected
+
+    def test_term_holds_until_next_boundary(self):
+        # A hair below 330 it is still LiChun; at 330 it flips to YuShui.
+        assert solar_term_for_longitude(329.999) == SOLAR_TERMS[0]
+        assert solar_term_for_longitude(330.0) == SOLAR_TERMS[1]
+        # Wrap around the 360/0 discontinuity: just below 315 is DaHan.
+        assert solar_term_for_longitude(314.999) == SOLAR_TERMS[23]
+
+    def test_matches_known_2024_solar_terms(self):
+        # Dates sit a few days inside each term, clear of the ~0.006 deg
+        # model error at the exact boundary moments.
+        cases = [
+            (utc(2024, 2, 9, 12, 0), "LiChun"),
+            (utc(2024, 3, 25, 12, 0), "ChunFen"),
+            (utc(2024, 6, 25, 12, 0), "XiaZhi"),
+            (utc(2024, 9, 27, 12, 0), "QiuFen"),
+            (utc(2024, 12, 26, 12, 0), "DongZhi"),
+        ]
+        for dt, expected_en in cases:
+            en, _ = solar_term_for_longitude(calculate_solar_longitude(dt))
+            assert en == expected_en, (dt, en)
+
+    def test_out_of_range_longitude_rejected(self):
+        for bad in (-0.1, 360.0, 400.0):
+            with pytest.raises(ValueError):
+                solar_term_for_longitude(bad)
 
 
 class TestToUtc:

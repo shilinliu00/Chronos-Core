@@ -12,6 +12,7 @@ from .astronomy import (
     calculate_solar_longitude,
     calculate_solar_declination,
     get_true_solar_time,
+    solar_term_for_longitude,
 )
 from .converter import TemporalCoordinateEngine
 
@@ -24,4 +25,5 @@ __all__ = [
     "calculate_solar_longitude",
     "calculate_solar_declination",
     "get_true_solar_time",
+    "solar_term_for_longitude",
 ]
