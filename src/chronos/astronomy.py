@@ -31,7 +31,7 @@ SOLAR_TERMS = [
 ]
 
 
-def solar_term_for_longitude(lon_degrees: float) -> tuple:
+def solar_term_for_longitude(lon_degrees: float) -> tuple[str, str]:
     """
     Names the solar term (节气) in force at a given ecliptic longitude.
 
