@@ -52,6 +52,13 @@ class TestDayPillar:
         assert (feb29 - feb28) % 60 == 1
         assert (mar1 - feb29) % 60 == 1
 
+    def test_continuous_across_non_leap_february(self, plain):
+        # 2023 has no Feb 29: Feb 28 -> Mar 1 must still advance the
+        # day pillar by exactly one, skipping the missing day cleanly.
+        feb28 = plain._get_day_index(utc(2023, 2, 28, 12, 0))
+        mar1 = plain._get_day_index(utc(2023, 3, 1, 12, 0))
+        assert (mar1 - feb28) % 60 == 1
+
     def test_1900_anchor_consistent(self, plain):
         # 1900-01-01 = 甲戌 (index 10); must agree with the 2024 anchor.
         assert plain._get_day_index(utc(1900, 1, 1)) == 10
