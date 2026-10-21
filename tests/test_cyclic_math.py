@@ -87,6 +87,31 @@ class TestRelations:
         assert not CyclicVariable(0).is_combining(CyclicVariable(2))
         assert not CyclicVariable(0).is_combining(CyclicVariable(6))
 
+    def test_ten_gods_for_yang_day_stem(self):
+        # Jia (index 0, yang Wood) day stem against all ten stems.
+        day = CyclicVariable(0)
+        expected = [
+            "比肩", "劫财", "食神", "伤官", "偏财",
+            "正财", "七杀", "正官", "偏印", "正印",
+        ]
+        for stem, god in enumerate(expected):
+            assert day.ten_god(CyclicVariable(stem)) == god, stem
+
+    def test_ten_gods_for_yin_day_stem(self):
+        # Yi (index 1, yin Wood) flips the same/different polarity
+        # outcomes relative to the yang day stem above.
+        day = CyclicVariable(1)
+        expected = [
+            "劫财", "比肩", "伤官", "食神", "正财",
+            "偏财", "正官", "七杀", "正印", "偏印",
+        ]
+        for stem, god in enumerate(expected):
+            assert day.ten_god(CyclicVariable(stem)) == god, stem
+
+    def test_ten_god_rejects_wrong_type(self):
+        with pytest.raises(TypeError):
+            CyclicVariable(0).ten_god("丙")
+
 
 class TestArithmetic:
     def test_add_wraps_cycle(self):
