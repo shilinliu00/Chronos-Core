@@ -9,7 +9,6 @@ Implements the classic algorithms:
 3. "Five Rats Chasing Hour" (Wu Zi Dun) for Hour Stem derivation.
 """
 
-import math
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Iterable, List
 
