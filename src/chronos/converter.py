@@ -16,6 +16,7 @@ from .cyclic_math import CyclicVariable
 from .astronomy import get_true_solar_time, calculate_solar_longitude, _to_utc
 from .astronomy import calculate_solar_declination, calculate_equation_of_time
 from .astronomy import solar_term_for_longitude
+from .astronomy import solar_term_type
 
 class TemporalCoordinateEngine:
     """
@@ -178,6 +179,7 @@ class TemporalCoordinateEngine:
                 "solar_longitude_deg": round(solar_lambda, 4),
                 "solar_term": term_en,
                 "solar_term_cn": term_cn,
+                "solar_term_type": solar_term_type(solar_lambda),
                 "solar_declination_deg": round(calculate_solar_declination(dt), 4),
                 "equation_of_time_minutes": round(eot_minutes, 3),
                 "longitude": longitude

@@ -180,6 +180,14 @@ class TestSolarTermMetadata:
         assert before["metadata"]["solar_term"] == "DaHan"
         assert after["metadata"]["solar_term"] == "LiChun"
 
+    def test_metadata_names_jie_vs_qi_terms(self, plain):
+        # 2024-03-10 sits in JingZhe (table index 2, even -> Jie);
+        # 2024-03-25 sits in ChunFen (table index 3, odd -> Qi).
+        jie = plain.get_coordinates(utc(2024, 3, 10, 12, 0), 0.0)
+        qi = plain.get_coordinates(utc(2024, 3, 25, 12, 0), 0.0)
+        assert jie["metadata"]["solar_term_type"] == "Jie"
+        assert qi["metadata"]["solar_term_type"] == "Qi"
+
 
 class TestPipeline:
     def test_full_chart_2024_01_01(self, plain):

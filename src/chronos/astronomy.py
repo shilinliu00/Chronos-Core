@@ -51,6 +51,23 @@ def solar_term_for_longitude(lon_degrees: float) -> tuple[str, str]:
     idx = int(((lon_degrees - 315.0) % 360.0) / 15.0)
     return SOLAR_TERMS[idx]
 
+def solar_term_type(lon_degrees: float) -> str:
+    """
+    Classifies the solar term in force as "Jie" (节) or "Qi" (气).
+
+    The term table starts at LiChun and alternates Jie, Qi, so even
+    table indices are Jie terms and odd ones are Qi terms. The 12 Jie
+    terms are the month pillar boundaries in converter.py; the Qi
+    terms sit mid month and never change a pillar.
+
+    :param lon_degrees: Solar ecliptic longitude in [0, 360).
+    :return: "Jie" or "Qi".
+    :raises ValueError: If longitude is outside [0, 360).
+    """
+    term_en, _ = solar_term_for_longitude(lon_degrees)
+    idx = next(i for i, (en, _) in enumerate(SOLAR_TERMS) if en == term_en)
+    return "Jie" if idx % 2 == 0 else "Qi"
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

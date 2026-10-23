@@ -9,6 +9,7 @@ from chronos.astronomy import (
     calculate_solar_declination,
     get_true_solar_time,
     solar_term_for_longitude,
+    solar_term_type,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -196,6 +197,18 @@ class TestSolarTerms:
         for bad in (-0.1, 360.0, 400.0):
             with pytest.raises(ValueError):
                 solar_term_for_longitude(bad)
+
+    def test_term_type_alternates_jie_qi(self):
+        # The table starts at LiChun (a Jie) and alternates: even indices
+        # are Jie terms (month pillar boundaries), odd ones are Qi terms.
+        for k in range(24):
+            lon = (315.0 + 15.0 * k) % 360.0
+            assert solar_term_type(lon) == ("Jie" if k % 2 == 0 else "Qi")
+
+    def test_term_type_out_of_range_rejected(self):
+        for bad in (-0.1, 360.0, 400.0):
+            with pytest.raises(ValueError):
+                solar_term_type(bad)
 
 
 class TestToUtc:
