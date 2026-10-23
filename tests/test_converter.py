@@ -153,6 +153,17 @@ class TestHourPillar:
         assert idx == 12
         assert (idx % 10, idx % 12) == (2, 0)
 
+    def test_five_rats_zi_hour_for_all_day_stems(self, plain):
+        # Zi-hour stem = (day stem % 5) * 2, so over the ten day stems the
+        # Zi hour cycles Jia-Zi, Bing-Zi, Wu-Zi, Geng-Zi, Ren-Zi, then
+        # repeats. All must keep branch Zi (0) while the stems advance.
+        assert [plain._get_hour_index(s, 0) for s in range(10)] == [
+            0, 12, 24, 36, 48, 0, 12, 24, 36, 48,
+        ]
+        assert [
+            str(CyclicVariable(plain._get_hour_index(s, 0))) for s in range(10)
+        ] == ["甲子", "丙子", "戊子", "庚子", "壬子"] * 2
+
     def test_known_hour_2024_01_01_noon(self, plain):
         res = plain.get_coordinates(utc(2024, 1, 1, 12, 0), 0.0)
         assert labels(res["coordinates"]["hour"]) == "GengWu"  # 庚午, cf. 万年历
