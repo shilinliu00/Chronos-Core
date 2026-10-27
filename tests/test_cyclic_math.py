@@ -87,6 +87,21 @@ class TestRelations:
         assert not CyclicVariable(0).is_combining(CyclicVariable(2))
         assert not CyclicVariable(0).is_combining(CyclicVariable(6))
 
+    def test_clash_and_combine_are_symmetric(self):
+        # Both relations are defined on branch distance, so they must
+        # read the same in either direction for every pair of branches.
+        for a in range(12):
+            for b in range(12):
+                x, y = CyclicVariable(a), CyclicVariable(b)
+                assert x.is_clashing(y) == y.is_clashing(x), (a, b)
+                assert x.is_combining(y) == y.is_combining(x), (a, b)
+        # No branch clashes or combines with itself: distance 0 is
+        # neither 6 apart nor summing to 1 mod 12.
+        for a in range(12):
+            x = CyclicVariable(a)
+            assert not x.is_clashing(x)
+            assert not x.is_combining(x)
+
     def test_ten_gods_for_yang_day_stem(self):
         # Jia (index 0, yang Wood) day stem against all ten stems.
         day = CyclicVariable(0)
