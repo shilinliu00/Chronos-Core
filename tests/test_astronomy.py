@@ -205,6 +205,13 @@ class TestSolarTerms:
             lon = (315.0 + 15.0 * k) % 360.0
             assert solar_term_type(lon) == ("Jie" if k % 2 == 0 else "Qi")
 
+    def test_term_type_holds_through_each_segment(self):
+        # Boundary tests pin the edges; midpoints pin the interior, so a
+        # term's type cannot flip partway through its 15 degree segment.
+        for k in range(24):
+            lon = (315.0 + 15.0 * k + 7.5) % 360.0
+            assert solar_term_type(lon) == ("Jie" if k % 2 == 0 else "Qi")
+
     def test_term_type_out_of_range_rejected(self):
         for bad in (-0.1, 360.0, 400.0):
             with pytest.raises(ValueError):

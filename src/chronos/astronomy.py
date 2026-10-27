@@ -31,6 +31,21 @@ SOLAR_TERMS = [
 ]
 
 
+def _solar_term_index(lon_degrees: float) -> int:
+    """
+    Table index of the term in force at a longitude.
+
+    Term k begins at (315 + 15k) degrees, so the index is
+    int(((lon - 315) % 360) / 15). Shared by the name and type lookups
+    so both stay consistent by construction.
+    """
+    if not 0.0 <= lon_degrees < 360.0:
+        raise ValueError(
+            f"longitude must be in [0, 360), got {lon_degrees}"
+        )
+    return int(((lon_degrees - 315.0) % 360.0) / 15.0)
+
+
 def solar_term_for_longitude(lon_degrees: float) -> tuple[str, str]:
     """
     Names the solar term (节气) in force at a given ecliptic longitude.
@@ -44,12 +59,7 @@ def solar_term_for_longitude(lon_degrees: float) -> tuple[str, str]:
     :return: (english_name, chinese_name) of the current term.
     :raises ValueError: If longitude is outside [0, 360).
     """
-    if not 0.0 <= lon_degrees < 360.0:
-        raise ValueError(
-            f"longitude must be in [0, 360), got {lon_degrees}"
-        )
-    idx = int(((lon_degrees - 315.0) % 360.0) / 15.0)
-    return SOLAR_TERMS[idx]
+    return SOLAR_TERMS[_solar_term_index(lon_degrees)]
 
 def solar_term_type(lon_degrees: float) -> str:
     """
@@ -64,9 +74,7 @@ def solar_term_type(lon_degrees: float) -> str:
     :return: "Jie" or "Qi".
     :raises ValueError: If longitude is outside [0, 360).
     """
-    term_en, _ = solar_term_for_longitude(lon_degrees)
-    idx = next(i for i, (en, _) in enumerate(SOLAR_TERMS) if en == term_en)
-    return "Jie" if idx % 2 == 0 else "Qi"
+    return "Jie" if _solar_term_index(lon_degrees) % 2 == 0 else "Qi"
 
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
