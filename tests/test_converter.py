@@ -59,6 +59,15 @@ class TestDayPillar:
         mar1 = plain._get_day_index(utc(2023, 3, 1, 12, 0))
         assert (mar1 - feb28) % 60 == 1
 
+    def test_continuous_across_year_boundary(self, plain):
+        # The day count is independent of the year pillar, so it must
+        # step by exactly one over New Year, including the 1999 to 2000
+        # turn where the Gregorian century rule differs from 1900.
+        for y in (1999, 2023):
+            dec31 = plain._get_day_index(utc(y, 12, 31, 12, 0))
+            jan1 = plain._get_day_index(utc(y + 1, 1, 1, 12, 0))
+            assert (jan1 - dec31) % 60 == 1
+
     def test_1900_anchor_consistent(self, plain):
         # 1900-01-01 = 甲戌 (index 10); must agree with the 2024 anchor.
         assert plain._get_day_index(utc(1900, 1, 1)) == 10
