@@ -200,6 +200,18 @@ class TestSolarTermMetadata:
         assert before["metadata"]["solar_term"] == "DaHan"
         assert after["metadata"]["solar_term"] == "LiChun"
 
+    def test_package_exports_solar_term_type(self, plain):
+        # solar_term_type drives the metadata field, so it should be
+        # importable from the package top level like its sibling lookup.
+        from chronos import solar_term_type
+
+        assert solar_term_type(315.0) == "Jie"
+        assert solar_term_type(330.0) == "Qi"
+        res = plain.get_coordinates(utc(2024, 3, 10, 12, 0), 0.0)
+        assert res["metadata"]["solar_term_type"] == solar_term_type(
+            res["metadata"]["solar_longitude_deg"]
+        )
+
     def test_metadata_names_jie_vs_qi_terms(self, plain):
         # 2024-03-10 sits in JingZhe (table index 2, even -> Jie);
         # 2024-03-25 sits in ChunFen (table index 3, odd -> Qi).
