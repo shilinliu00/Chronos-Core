@@ -337,6 +337,19 @@ class TestTimestampInput:
             utc(2024, 1, 1, 12, 0), 0.0
         )
 
+    def test_epoch_and_fractional_timestamps(self, plain):
+        # Timestamp zero is the epoch itself, not a special case, and a
+        # fractional timestamp must match the datetime with the same
+        # sub second part.
+        dt = utc(1970, 1, 1, 0, 0)
+        assert plain.get_coordinates_from_timestamp(0.0, 0.0) == plain.get_coordinates(
+            dt, 0.0
+        )
+        dt_frac = datetime(2024, 1, 1, 12, 0, 0, 500000, tzinfo=timezone.utc)
+        assert plain.get_coordinates_from_timestamp(
+            dt_frac.timestamp(), 0.0
+        ) == plain.get_coordinates(dt_frac, 0.0)
+
     def test_negative_timestamp_before_epoch(self, plain):
         # Pre 1970 dates have negative timestamps; the conversion must
         # agree with the datetime path (here: 1899-12-31 = GuiYou day).
