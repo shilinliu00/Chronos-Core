@@ -177,6 +177,24 @@ class TestHourPillar:
         res = plain.get_coordinates(utc(2024, 1, 1, 12, 0), 0.0)
         assert labels(res["coordinates"]["hour"]) == "GengWu"  # 庚午, cf. 万年历
 
+    def test_hour_branch_minute_boundaries(self, plain):
+        # Whole hour tests pin the block; the minute just before and
+        # after a boundary must not leak into the neighbouring branch.
+        # 2024-01-01 is a Jia day, so the Zi hour stem is Jia and the
+        # Chou and Hai hour stems are both Yi.
+        assert labels(
+            plain.get_coordinates(utc(2024, 1, 1, 0, 59), 0.0)["coordinates"]["hour"]
+        ) == "JiaZi"
+        assert labels(
+            plain.get_coordinates(utc(2024, 1, 1, 1, 0), 0.0)["coordinates"]["hour"]
+        ) == "YiChou"
+        assert labels(
+            plain.get_coordinates(utc(2024, 1, 1, 22, 59), 0.0)["coordinates"]["hour"]
+        ) == "YiHai"
+        assert labels(
+            plain.get_coordinates(utc(2024, 1, 1, 23, 0), 0.0)["coordinates"]["hour"]
+        ) == "JiaZi"
+
     def test_late_zi_stays_on_same_day(self, plain):
         # Engine convention: 23:00-24:00 is Zi hour of the *current* day
         # (some schools roll it to the next day; this engine does not).
