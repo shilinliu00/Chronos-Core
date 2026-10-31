@@ -486,3 +486,11 @@ class TestClassicTables:
         assert labels(CyclicVariable(years[0]).to_json()) == "JiaZi"
         assert labels(CyclicVariable(years[-1]).to_json()) == "GuiHai"
         assert plain._get_year_index(utc(2044, 6, 15), 0.0) == 0
+
+    def test_day_pillar_runs_the_full_sixty_day_cycle(self, plain):
+        # 2024-01-01 is the Jia-Zi anchor; the sixty days from it must
+        # walk indices 0-59 exactly once, then wrap back to Jia-Zi.
+        days = [plain._get_day_index(utc(2024, 1, 1, 12, 0) + timedelta(days=k))
+                for k in range(60)]
+        assert days == list(range(60))
+        assert plain._get_day_index(utc(2024, 1, 1, 12, 0) + timedelta(days=60)) == 0
