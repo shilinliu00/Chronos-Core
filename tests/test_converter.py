@@ -440,3 +440,38 @@ class TestBoundaries:
         res = plain.get_coordinates(utc(2024, 1, 2, 0, 30), 0.0)
         assert labels(res["coordinates"]["day"]) == "YiChou"
         assert labels(res["coordinates"]["hour"]) == "BingZi"
+
+
+class TestClassicTables:
+    def test_five_tigers_table_for_all_year_stem_groups(self, plain):
+        # The Jia year table is pinned elsewhere; the other four groups
+        # follow the same rule with a different Tiger month stem:
+        # Yi/Geng years start at Wu-Yin, Bing/Xin at Geng-Yin,
+        # Ding/Ren at Ren-Yin, Wu/Gui at Jia-Yin. Each group repeats
+        # for the year stem five places later (Jia and Ji agree).
+        expected = {
+            1: [
+                "WuYin", "JiMao", "GengChen", "XinSi", "RenWu", "GuiWei",
+                "JiaShen", "YiYou", "BingXu", "DingHai", "WuZi", "JiChou",
+            ],
+            2: [
+                "GengYin", "XinMao", "RenChen", "GuiSi", "JiaWu", "YiWei",
+                "BingShen", "DingYou", "WuXu", "JiHai", "GengZi", "XinChou",
+            ],
+            3: [
+                "RenYin", "GuiMao", "JiaChen", "YiSi", "BingWu", "DingWei",
+                "WuShen", "JiYou", "GengXu", "XinHai", "RenZi", "GuiChou",
+            ],
+            4: [
+                "JiaYin", "YiMao", "BingChen", "DingSi", "WuWu", "JiWei",
+                "GengShen", "XinYou", "RenXu", "GuiHai", "JiaZi", "YiChou",
+            ],
+        }
+        for year_stem, table in expected.items():
+            got = [plain._get_month_index(year_stem, 315 + 30 * k + 15)
+                   for k in range(12)]
+            assert [labels(CyclicVariable(i).to_json()) for i in got] == table
+            # The paired year stem (five later) shares the whole table.
+            paired = [plain._get_month_index(year_stem + 5, 315 + 30 * k + 15)
+                      for k in range(12)]
+            assert paired == got
