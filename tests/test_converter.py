@@ -475,3 +475,14 @@ class TestClassicTables:
             paired = [plain._get_month_index(year_stem + 5, 315 + 30 * k + 15)
                       for k in range(12)]
             assert paired == got
+
+    def test_year_pillar_runs_the_full_sixty_year_cycle(self, plain):
+        # 1984 starts a new cycle at Jia-Zi (index 0); with a June date
+        # the LiChun adjustment never applies, so the years 1984-2043
+        # must walk indices 0-59 exactly once, ending at Gui-Hai.
+        years = [plain._get_year_index(utc(1984 + k, 6, 15), 0.0)
+                 for k in range(60)]
+        assert years == list(range(60))
+        assert labels(CyclicVariable(years[0]).to_json()) == "JiaZi"
+        assert labels(CyclicVariable(years[-1]).to_json()) == "GuiHai"
+        assert plain._get_year_index(utc(2044, 6, 15), 0.0) == 0
