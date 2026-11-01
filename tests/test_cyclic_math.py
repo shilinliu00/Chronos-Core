@@ -34,6 +34,17 @@ class TestConstruction:
         with pytest.raises(ValueError):
             CyclicVariable.from_stem_branch(0, 1)
 
+    def test_from_label_cn_round_trips_all_sixty(self):
+        for i in range(60):
+            assert CyclicVariable.from_label_cn(str(CyclicVariable(i))) == CyclicVariable(i)
+
+    def test_from_label_cn_rejects_bad_labels(self):
+        with pytest.raises(TypeError):
+            CyclicVariable.from_label_cn(0)
+        for bad in ("", "甲", "甲子乙", "甲甲", "子甲", "甲X", "甲丑"):
+            with pytest.raises(ValueError):
+                CyclicVariable.from_label_cn(bad)
+
     def test_from_stem_branch_rejects_out_of_range(self):
         with pytest.raises(ValueError):
             CyclicVariable.from_stem_branch(10, 0)

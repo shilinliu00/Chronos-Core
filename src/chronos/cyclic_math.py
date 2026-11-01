@@ -80,6 +80,32 @@ class CyclicVariable:
         k = (5 * (((branch_idx - stem_idx) % 12) // 2)) % 6
         return cls(stem_idx + 10 * k)
 
+    @classmethod
+    def from_label_cn(cls, label: str) -> 'CyclicVariable':
+        """
+        Builds a variable from its two character Chinese label, the
+        inverse of str(), e.g. "甲子" -> index 0.
+
+        :param label: Exactly two characters: a stem from STEMS_CN
+            followed by a branch from BRANCHES_CN.
+        :raises TypeError: If label is not a string.
+        :raises ValueError: If label is not a valid pillar label
+            (wrong length, unknown character, or mismatched parity).
+        """
+        if not isinstance(label, str):
+            raise TypeError("label must be a string")
+        if len(label) != 2:
+            raise ValueError(f"label must be two characters, got {label!r}")
+        try:
+            stem_idx = cls.STEMS_CN.index(label[0])
+        except ValueError:
+            raise ValueError(f"unknown stem character {label[0]!r}") from None
+        try:
+            branch_idx = cls.BRANCHES_CN.index(label[1])
+        except ValueError:
+            raise ValueError(f"unknown branch character {label[1]!r}") from None
+        return cls.from_stem_branch(stem_idx, branch_idx)
+
     @property
     def index(self) -> int:
         """Normalized position in Z_60, always in [0, 60)."""
