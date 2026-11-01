@@ -123,6 +123,25 @@ class TestRelations:
         for stem, god in enumerate(expected):
             assert day.ten_god(CyclicVariable(stem)) == god, stem
 
+    def test_ten_gods_for_metal_and_water_day_stems(self):
+        # Wood rows are pinned above; the element rotation must also
+        # hold for the other element groups, so pin a yang Metal row
+        # (Geng) and a yin Water row (Gui) against all ten stems.
+        geng = CyclicVariable(6)
+        expected_geng = [
+            "偏财", "正财", "七杀", "正官", "偏印",
+            "正印", "比肩", "劫财", "食神", "伤官",
+        ]
+        for stem, god in enumerate(expected_geng):
+            assert geng.ten_god(CyclicVariable(stem)) == god, stem
+        gui = CyclicVariable(9)
+        expected_gui = [
+            "伤官", "食神", "正财", "偏财", "正官",
+            "七杀", "正印", "偏印", "劫财", "比肩",
+        ]
+        for stem, god in enumerate(expected_gui):
+            assert gui.ten_god(CyclicVariable(stem)) == god, stem
+
     def test_ten_god_rejects_wrong_type(self):
         with pytest.raises(TypeError):
             CyclicVariable(0).ten_god("丙")
