@@ -78,6 +78,14 @@ class TestSolarDeclination:
             delta = calculate_solar_declination(utc(2024, month, 15, 12, 0))
             assert -23.45 <= delta <= 23.45
 
+    def test_sign_changes_across_both_equinoxes(self):
+        # Declination is negative before the vernal equinox and
+        # positive just after it; the autumnal equinox flips it back.
+        assert calculate_solar_declination(utc(2024, 3, 19, 12, 0)) < 0
+        assert calculate_solar_declination(utc(2024, 3, 21, 12, 0)) > 0
+        assert calculate_solar_declination(utc(2024, 9, 21, 12, 0)) > 0
+        assert calculate_solar_declination(utc(2024, 9, 23, 12, 0)) < 0
+
     def test_monotonic_increase_over_a_day(self):
         a = calculate_solar_longitude(utc(2024, 6, 1, 0, 0))
         b = calculate_solar_longitude(utc(2024, 6, 2, 0, 0))
