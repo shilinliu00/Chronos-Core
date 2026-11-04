@@ -91,6 +91,19 @@ class TestSolarDeclination:
         b = calculate_solar_longitude(utc(2024, 6, 2, 0, 0))
         assert 0.9 < (b - a) < 1.1  # ~0.986 deg/day
 
+    def test_continuous_across_longitude_wrap(self):
+        # Longitude wraps 360 -> 0 at the vernal equinox, inside the
+        # Mao month, so the raw value drops; unwrapped, it must keep
+        # increasing by ~0.986 deg/day with no jump, or term lookups
+        # near the equinox would see a spurious boundary.
+        start = utc(2024, 3, 18, 0, 0)
+        prev = calculate_solar_longitude(start)
+        for day in range(1, 6):
+            raw = calculate_solar_longitude(start + timedelta(days=day))
+            unwrapped = raw + 360.0 if raw < prev else raw
+            assert 0.9 < (unwrapped - prev) < 1.1, day
+            prev = raw
+
     def test_microsecond_inputs_give_distinct_longitudes(self):
         # The kernel claims microsecond precision via total_seconds();
         # shifting by one microsecond must move the longitude forward.
