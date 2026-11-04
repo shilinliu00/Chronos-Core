@@ -38,6 +38,24 @@ class TestConstruction:
         for i in range(60):
             assert CyclicVariable.from_label_cn(str(CyclicVariable(i))) == CyclicVariable(i)
 
+    def test_from_label_en_round_trips_all_sixty(self):
+        for i in range(60):
+            v = CyclicVariable(i)
+            assert CyclicVariable.from_label_en(v.stem + v.branch) == v
+
+    def test_from_label_en_known_values(self):
+        assert CyclicVariable.from_label_en("JiaZi") == CyclicVariable(0)
+        assert CyclicVariable.from_label_en("GengShen") == CyclicVariable(56)
+        assert CyclicVariable.from_label_en("GuiHai") == CyclicVariable(59)
+        assert CyclicVariable.from_label_en("WuWu") == CyclicVariable(54)
+
+    def test_from_label_en_rejects_bad_labels(self):
+        with pytest.raises(TypeError):
+            CyclicVariable.from_label_en(0)
+        for bad in ("", "Jia", "JiaZiYi", "JiaX", "JiaChou", "jiazi", "ZiJia", "JiaZi "):
+            with pytest.raises(ValueError):
+                CyclicVariable.from_label_en(bad)
+
     def test_from_label_cn_rejects_bad_labels(self):
         with pytest.raises(TypeError):
             CyclicVariable.from_label_cn(0)

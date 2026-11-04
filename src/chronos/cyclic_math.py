@@ -106,6 +106,28 @@ class CyclicVariable:
             raise ValueError(f"unknown branch character {label[1]!r}") from None
         return cls.from_stem_branch(stem_idx, branch_idx)
 
+    @classmethod
+    def from_label_en(cls, label: str) -> 'CyclicVariable':
+        """
+        Builds a variable from its pinyin label, the inverse of
+        stem + branch, e.g. "JiaZi" -> index 0.
+
+        :param label: A stem from STEMS followed by a branch from
+            BRANCHES, in the exact title case used by those tables.
+        :raises TypeError: If label is not a string.
+        :raises ValueError: If label is not a valid pillar label
+            (unknown stem, unknown branch, or mismatched parity).
+        """
+        if not isinstance(label, str):
+            raise TypeError("label must be a string")
+        # Stem names are pairwise prefix disjoint (Jia/Ji, Geng/Gui
+        # differ at the second letter), so at most one stem matches.
+        for stem_idx, stem in enumerate(cls.STEMS):
+            if label.startswith(stem) and label[len(stem):] in cls.BRANCHES:
+                branch_idx = cls.BRANCHES.index(label[len(stem):])
+                return cls.from_stem_branch(stem_idx, branch_idx)
+        raise ValueError(f"unknown pillar label {label!r}")
+
     @property
     def index(self) -> int:
         """Normalized position in Z_60, always in [0, 60)."""
