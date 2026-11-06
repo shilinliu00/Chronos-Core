@@ -10,6 +10,7 @@ from chronos.astronomy import (
     get_true_solar_time,
     solar_term_for_longitude,
     solar_term_type,
+    next_solar_term,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -237,6 +238,50 @@ class TestSolarTerms:
         for bad in (-0.1, 360.0, 400.0):
             with pytest.raises(ValueError):
                 solar_term_type(bad)
+
+
+class TestNextSolarTerm:
+    def test_matches_known_2024_term_moments(self):
+        # True moments of five 2024 terms; the kernel's ~0.006 deg
+        # error is about 25 seconds of time, so 10 minutes is generous.
+        cases = [
+            (utc(2024, 2, 1, 12, 0), utc(2024, 2, 4, 8, 27), "LiChun", "立春"),
+            (utc(2024, 3, 17, 12, 0), utc(2024, 3, 20, 3, 6), "ChunFen", "春分"),
+            (utc(2024, 6, 17, 12, 0), utc(2024, 6, 20, 20, 51), "XiaZhi", "夏至"),
+            (utc(2024, 9, 19, 12, 0), utc(2024, 9, 22, 12, 44), "QiuFen", "秋分"),
+            (utc(2024, 12, 18, 12, 0), utc(2024, 12, 21, 9, 20), "DongZhi", "冬至"),
+        ]
+        for start, expected_moment, expected_en, expected_cn in cases:
+            moment, en, cn = next_solar_term(start)
+            assert en == expected_en, (start, en)
+            assert cn == expected_cn
+            assert abs((moment - expected_moment).total_seconds()) < 600, (
+                start, moment, expected_moment,
+            )
+
+    def test_result_is_aware_utc(self):
+        moment, _, _ = next_solar_term(utc(2024, 6, 1, 12, 0))
+        assert moment.tzinfo is timezone.utc
+        # Naive input is assumed UTC and must give the same moment.
+        naive_moment, _, _ = next_solar_term(datetime(2024, 6, 1, 12, 0))
+        assert naive_moment == moment
+
+    def test_moment_on_a_boundary_returns_following_term(self):
+        # Starting exactly at the true LiChun moment must skip ahead
+        # to YuShui (~Feb 19), not return LiChun again.
+        moment, en, _ = next_solar_term(utc(2024, 2, 4, 8, 27))
+        assert en == "YuShui"
+        assert moment > utc(2024, 2, 4, 8, 27)
+
+    def test_successive_calls_walk_the_term_table(self):
+        # Chaining next_solar_term must step through the table in
+        # order, including the wrap from DaHan back to LiChun.
+        moment, en, _ = next_solar_term(utc(2024, 1, 15, 12, 0))
+        assert en == "DaHan"
+        moment, en, _ = next_solar_term(moment)
+        assert en == "LiChun"
+        moment, en, _ = next_solar_term(moment)
+        assert en == "YuShui"
 
 
 class TestToUtc:

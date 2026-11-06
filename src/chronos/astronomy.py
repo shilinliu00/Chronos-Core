@@ -76,6 +76,47 @@ def solar_term_type(lon_degrees: float) -> str:
     """
     return "Jie" if _solar_term_index(lon_degrees) % 2 == 0 else "Qi"
 
+def next_solar_term(dt: datetime) -> tuple[datetime, str, str]:
+    """
+    Finds the next solar term boundary after a moment.
+
+    Solar longitude grows monotonically at roughly 0.99 degrees per
+    day, so the next 15 degree boundary (315 + 15k) is at most about
+    15.2 days away; bisection over a 17 day bracket locates it to
+    well under a second. The simplified longitude kernel carries
+    about 0.006 degrees of error, so the returned moment is good
+    to roughly a minute.
+
+    :param dt: Datetime to search forward from; naive inputs are
+        assumed to be UTC. A moment exactly on a boundary returns
+        the following term, not the current one.
+    :return: (moment, english_name, chinese_name) of the term that
+        begins at that boundary; moment is timezone aware UTC.
+    """
+    dt_utc = _to_utc(dt)
+    start_lon = calculate_solar_longitude(dt_utc)
+    # Distance to the next boundary, in (0, 15]: the modulo wraps to
+    # 0 both exactly on a boundary and exactly 15 degrees before one,
+    # and in both cases the next boundary is 15 degrees ahead.
+    delta = (315.0 - start_lon) % 15.0
+    if delta == 0.0:
+        delta = 15.0
+    current_idx = int(((start_lon - 315.0) % 360.0) / 15.0)
+    next_term = SOLAR_TERMS[(current_idx + 1) % 24]
+
+    def progress(t: datetime) -> float:
+        return (calculate_solar_longitude(t) - start_lon) % 360.0
+
+    lo = dt_utc
+    hi = dt_utc + timedelta(days=17)
+    for _ in range(50):
+        mid = lo + (hi - lo) / 2
+        if progress(mid) < delta:
+            lo = mid
+        else:
+            hi = mid
+    return hi, next_term[0], next_term[1]
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

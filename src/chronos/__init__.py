@@ -14,6 +14,7 @@ from .astronomy import (
     get_true_solar_time,
     solar_term_for_longitude,
     solar_term_type,
+    next_solar_term,
 )
 from .converter import TemporalCoordinateEngine
 
@@ -28,4 +29,5 @@ __all__ = [
     "get_true_solar_time",
     "solar_term_for_longitude",
     "solar_term_type",
+    "next_solar_term",
 ]
