@@ -112,20 +112,31 @@ class CyclicVariable:
         Builds a variable from its pinyin label, the inverse of
         stem + branch, e.g. "JiaZi" -> index 0.
 
+        Matching is case insensitive, so "jiazi", "JiaZi" and
+        "JIAZI" all parse to the same pillar. Stems are tried
+        longest first because "Ji" is a prefix of "Jia", so a
+        naive first match could split "JiaZi" the wrong way.
+
         :param label: A stem from STEMS followed by a branch from
-            BRANCHES, in the exact title case used by those tables.
+            BRANCHES, in any letter case.
         :raises TypeError: If label is not a string.
         :raises ValueError: If label is not a valid pillar label
             (unknown stem, unknown branch, or mismatched parity).
         """
         if not isinstance(label, str):
             raise TypeError("label must be a string")
-        # Stem names are pairwise prefix disjoint (Jia/Ji, Geng/Gui
-        # differ at the second letter), so at most one stem matches.
-        for stem_idx, stem in enumerate(cls.STEMS):
-            if label.startswith(stem) and label[len(stem):] in cls.BRANCHES:
-                branch_idx = cls.BRANCHES.index(label[len(stem):])
-                return cls.from_stem_branch(stem_idx, branch_idx)
+        normalized = label.lower()
+        stems_longest_first = sorted(
+            enumerate(cls.STEMS), key=lambda pair: -len(pair[1])
+        )
+        for stem_idx, stem in stems_longest_first:
+            stem_lower = stem.lower()
+            if not normalized.startswith(stem_lower):
+                continue
+            rest = normalized[len(stem_lower):]
+            for branch_idx, branch in enumerate(cls.BRANCHES):
+                if rest == branch.lower():
+                    return cls.from_stem_branch(stem_idx, branch_idx)
         raise ValueError(f"unknown pillar label {label!r}")
 
     @property

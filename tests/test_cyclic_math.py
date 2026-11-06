@@ -49,10 +49,25 @@ class TestConstruction:
         assert CyclicVariable.from_label_en("GuiHai") == CyclicVariable(59)
         assert CyclicVariable.from_label_en("WuWu") == CyclicVariable(54)
 
+    def test_from_label_en_ignores_letter_case(self):
+        # Pinyin labels parse in any case, including the Ji/Jia
+        # prefix trap: "jiazi" must split as Jia+Zi, not Ji+azi.
+        for i in range(60):
+            v = CyclicVariable(i)
+            label = v.stem + v.branch
+            assert CyclicVariable.from_label_en(label.lower()) == v
+            assert CyclicVariable.from_label_en(label.upper()) == v
+        assert CyclicVariable.from_label_en("jiazi") == CyclicVariable(0)
+        assert CyclicVariable.from_label_en("JIAZI") == CyclicVariable(0)
+        assert CyclicVariable.from_label_en("jiaZi") == CyclicVariable(0)
+        assert CyclicVariable.from_label_en("gengshen") == CyclicVariable(56)
+        assert CyclicVariable.from_label_en("JiChou") == CyclicVariable(25)
+        assert CyclicVariable.from_label_en("jichou") == CyclicVariable(25)
+
     def test_from_label_en_rejects_bad_labels(self):
         with pytest.raises(TypeError):
             CyclicVariable.from_label_en(0)
-        for bad in ("", "Jia", "JiaZiYi", "JiaX", "JiaChou", "jiazi", "ZiJia", "JiaZi "):
+        for bad in ("", "Jia", "JiaZiYi", "JiaX", "JiaChou", "ZiJia", "JiaZi ", " jiazi"):
             with pytest.raises(ValueError):
                 CyclicVariable.from_label_en(bad)
 
