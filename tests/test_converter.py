@@ -59,6 +59,22 @@ class TestDayPillar:
         mar1 = plain._get_day_index(utc(2023, 3, 1, 12, 0))
         assert (mar1 - feb28) % 60 == 1
 
+    def test_continuous_across_century_leap_rules(self, plain):
+        # The day count is a plain date difference, so it must follow
+        # the Gregorian century rule: 1900 and 2100 are divisible by
+        # 100 but not 400, so they have no Feb 29 and Feb 28 -> Mar 1
+        # advances by one; 2000 is divisible by 400, so it does have
+        # Feb 29 and each step advances by one.
+        for y in (1900, 2100):
+            feb28 = plain._get_day_index(utc(y, 2, 28, 12, 0))
+            mar1 = plain._get_day_index(utc(y, 3, 1, 12, 0))
+            assert (mar1 - feb28) % 60 == 1
+        feb28 = plain._get_day_index(utc(2000, 2, 28, 12, 0))
+        feb29 = plain._get_day_index(utc(2000, 2, 29, 12, 0))
+        mar1 = plain._get_day_index(utc(2000, 3, 1, 12, 0))
+        assert (feb29 - feb28) % 60 == 1
+        assert (mar1 - feb29) % 60 == 1
+
     def test_continuous_across_year_boundary(self, plain):
         # The day count is independent of the year pillar, so it must
         # step by exactly one over New Year, including the 1999 to 2000
