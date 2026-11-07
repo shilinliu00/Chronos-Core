@@ -101,7 +101,7 @@ def next_solar_term(dt: datetime) -> tuple[datetime, str, str]:
     delta = (315.0 - start_lon) % 15.0
     if delta == 0.0:
         delta = 15.0
-    current_idx = int(((start_lon - 315.0) % 360.0) / 15.0)
+    current_idx = _solar_term_index(start_lon)
     next_term = SOLAR_TERMS[(current_idx + 1) % 24]
 
     def progress(t: datetime) -> float:
