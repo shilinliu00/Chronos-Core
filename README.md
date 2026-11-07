@@ -25,6 +25,7 @@ Chronos-Core calculates absolute Earth-Sun orbital mechanics to define strict te
 * **Solar Ecliptic Longitude ($\lambda$):** Computes exact solar positioning relative to the J2000.0 epoch. The annual cycle strictly resets at $\lambda = 315^\circ$ (LiChun, Start of Spring), dynamically resolving the "Year Boundary" edge cases.
 * **Solar Declination ($\delta$):** Derives the Sun's celestial latitude from $\lambda$ via $\delta = \arcsin(\sin\varepsilon \cdot \sin\lambda)$, with the J2000 mean obliquity $\varepsilon = 23.4393^\circ$. Available as `calculate_solar_declination` for seasonal boundary diagnostics.
 * **Next solar term:** `next_solar_term(dt)` bisects solar longitude to find the moment (aware UTC) and name of the next 24 solar term boundary, good to roughly a minute; a moment exactly on a boundary returns the following term.
+* **Previous solar term:** `previous_solar_term(dt)` is the mirror image, bisecting backward to find the moment (aware UTC) and name of the term boundary at or before a moment, good to roughly a minute; a moment exactly on a boundary returns that boundary's term, and the returned moment sits just before the boundary so chaining calls walks the table backward.
 
 ### 2. $\mathbb{Z}_{60}$ Modular Arithmetic Engine
 Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
@@ -33,8 +34,8 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
   $$(a - b) \pmod{12} = 6$$
 * **Hashable States:** Objects implement `__hash__` and `__eq__`, allowing temporal states to be directly used as keys in Hash Maps for high-speed frequency counting.
 * **Closed-form stem–branch resolution:** `CyclicVariable.from_stem_branch(stem, branch)` solves the Z_10 × Z_12 index via the Chinese Remainder Theorem in O(1), replacing the old O(60) brute-force search.
-* **Chinese label parsing:** `CyclicVariable.from_label_cn(label)` is the inverse of `str()`, turning a two character pillar label such as 甲子 back into its cycle index, and rejecting unknown characters and parity mismatched pairs.
-* **Pinyin label parsing:** `CyclicVariable.from_label_en(label)` is the inverse of `stem + branch`, turning a pinyin pillar label such as JiaZi back into its cycle index, and rejecting unknown stems, unknown branches, and parity mismatched pairs. Matching is case insensitive, so `jiazi` and `JIAZI` parse the same way.
+* **Chinese label parsing:** `CyclicVariable.from_label_cn(label)` is the inverse of `str()`, turning a two character pillar label such as 甲子 back into its cycle index, and rejecting unknown characters and parity mismatched pairs. Surrounding whitespace is ignored.
+* **Pinyin label parsing:** `CyclicVariable.from_label_en(label)` is the inverse of `stem + branch`, turning a pinyin pillar label such as JiaZi back into its cycle index, and rejecting unknown stems, unknown branches, and parity mismatched pairs. Matching is case insensitive, so `jiazi` and `JIAZI` parse the same way, and surrounding whitespace is ignored.
 * **Ten Gods (十神) layer:** `CyclicVariable.ten_god(other)` judges the classic ten-god relation between two stems from the five-element generation/overcoming cycles plus yin/yang polarity (e.g. 甲日见丙为食神, 甲日见庚为七杀).
 * **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
 
@@ -127,7 +128,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-130 tests, 99% coverage. Day-pillar anchors are cross-checked against
+138 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
