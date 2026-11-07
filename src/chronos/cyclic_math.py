@@ -86,6 +86,9 @@ class CyclicVariable:
         Builds a variable from its two character Chinese label, the
         inverse of str(), e.g. "甲子" -> index 0.
 
+        Surrounding whitespace is ignored, so a label pasted with
+        spaces around it still parses.
+
         :param label: Exactly two characters: a stem from STEMS_CN
             followed by a branch from BRANCHES_CN.
         :raises TypeError: If label is not a string.
@@ -94,6 +97,7 @@ class CyclicVariable:
         """
         if not isinstance(label, str):
             raise TypeError("label must be a string")
+        label = label.strip()
         if len(label) != 2:
             raise ValueError(f"label must be two characters, got {label!r}")
         try:
@@ -113,9 +117,11 @@ class CyclicVariable:
         stem + branch, e.g. "JiaZi" -> index 0.
 
         Matching is case insensitive, so "jiazi", "JiaZi" and
-        "JIAZI" all parse to the same pillar. Stems are tried
-        longest first because "Ji" is a prefix of "Jia", so a
-        naive first match could split "JiaZi" the wrong way.
+        "JIAZI" all parse to the same pillar. Surrounding whitespace
+        is ignored, so a label pasted with spaces around it still
+        parses. Stems are tried longest first because "Ji" is a
+        prefix of "Jia", so a naive first match could split "JiaZi"
+        the wrong way.
 
         :param label: A stem from STEMS followed by a branch from
             BRANCHES, in any letter case.
@@ -125,7 +131,7 @@ class CyclicVariable:
         """
         if not isinstance(label, str):
             raise TypeError("label must be a string")
-        normalized = label.lower()
+        normalized = label.strip().lower()
         stems_longest_first = sorted(
             enumerate(cls.STEMS), key=lambda pair: -len(pair[1])
         )
