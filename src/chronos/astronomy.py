@@ -117,6 +117,51 @@ def next_solar_term(dt: datetime) -> tuple[datetime, str, str]:
             hi = mid
     return hi, next_term[0], next_term[1]
 
+def previous_solar_term(dt: datetime) -> tuple[datetime, str, str]:
+    """
+    Finds the solar term boundary at or before a moment.
+
+    Mirror of next_solar_term, searching backward: solar longitude
+    grows monotonically at roughly 0.99 degrees per day, so the
+    previous 15 degree boundary (315 + 15k) is at most about
+    15.2 days behind; bisection over a 17 day bracket locates it to
+    well under a second. The simplified longitude kernel carries
+    about 0.006 degrees of error, so the returned moment is good
+    to roughly a minute.
+
+    The returned moment sits just before the boundary, so chaining
+    calls walks the term table backward one term at a time.
+
+    :param dt: Datetime to search backward from; naive inputs are
+        assumed to be UTC. A moment exactly on a boundary returns
+        that boundary's term, not the one before it.
+    :return: (moment, english_name, chinese_name) of the term that
+        began at that boundary; moment is timezone aware UTC.
+    """
+    dt_utc = _to_utc(dt)
+    start_lon = calculate_solar_longitude(dt_utc)
+    # Distance back to the most recent boundary, in [0, 15): the
+    # modulo wraps to 0 exactly on a boundary, and that boundary is
+    # the term in force, so return it directly.
+    delta = (start_lon - 315.0) % 15.0
+    current_idx = _solar_term_index(start_lon)
+    term = SOLAR_TERMS[current_idx]
+    if delta == 0.0:
+        return dt_utc, term[0], term[1]
+
+    def progress(t: datetime) -> float:
+        return (start_lon - calculate_solar_longitude(t)) % 360.0
+
+    lo = dt_utc - timedelta(days=17)
+    hi = dt_utc
+    for _ in range(50):
+        mid = lo + (hi - lo) / 2
+        if progress(mid) < delta:
+            hi = mid
+        else:
+            lo = mid
+    return lo, term[0], term[1]
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

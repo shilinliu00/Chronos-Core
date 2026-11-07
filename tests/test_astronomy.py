@@ -11,6 +11,7 @@ from chronos.astronomy import (
     solar_term_for_longitude,
     solar_term_type,
     next_solar_term,
+    previous_solar_term,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -282,6 +283,78 @@ class TestNextSolarTerm:
         assert en == "LiChun"
         moment, en, _ = next_solar_term(moment)
         assert en == "YuShui"
+
+
+class TestPreviousSolarTerm:
+    def test_matches_known_2024_term_moments(self):
+        # Same true moments as the next term tests, approached from
+        # just after each boundary; 10 minutes is generous.
+        cases = [
+            (utc(2024, 2, 5, 12, 0), utc(2024, 2, 4, 8, 27), "LiChun", "立春"),
+            (utc(2024, 3, 21, 12, 0), utc(2024, 3, 20, 3, 6), "ChunFen", "春分"),
+            (utc(2024, 6, 21, 12, 0), utc(2024, 6, 20, 20, 51), "XiaZhi", "夏至"),
+            (utc(2024, 9, 23, 12, 0), utc(2024, 9, 22, 12, 44), "QiuFen", "秋分"),
+            (utc(2024, 12, 22, 12, 0), utc(2024, 12, 21, 9, 20), "DongZhi", "冬至"),
+        ]
+        for start, expected_moment, expected_en, expected_cn in cases:
+            moment, en, cn = previous_solar_term(start)
+            assert en == expected_en, (start, en)
+            assert cn == expected_cn
+            assert abs((moment - expected_moment).total_seconds()) < 600, (
+                start, moment, expected_moment,
+            )
+
+    def test_result_is_aware_utc(self):
+        moment, _, _ = previous_solar_term(utc(2024, 6, 1, 12, 0))
+        assert moment.tzinfo is timezone.utc
+        # Naive input is assumed UTC and must give the same moment.
+        naive_moment, _, _ = previous_solar_term(datetime(2024, 6, 1, 12, 0))
+        assert naive_moment == moment
+
+    def test_moment_on_a_boundary_returns_that_term(self):
+        # Starting exactly at the true LiChun moment must return
+        # LiChun itself, the term in force, not XiaoHan before it.
+        moment, en, _ = previous_solar_term(utc(2024, 2, 4, 8, 27))
+        assert en == "LiChun"
+        assert abs((moment - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+
+    def test_name_matches_term_in_force(self):
+        # The returned term must always be the one
+        # solar_term_for_longitude names at the starting moment.
+        for start in (
+            utc(2024, 1, 15, 12, 0), utc(2024, 4, 10, 6, 0),
+            utc(2024, 7, 30, 18, 0), utc(2024, 11, 5, 0, 0),
+        ):
+            _, en, cn = previous_solar_term(start)
+            assert (en, cn) == solar_term_for_longitude(
+                calculate_solar_longitude(start)
+            )
+
+    def test_successive_calls_walk_the_term_table_backward(self):
+        # Chaining previous_solar_term must step through the table
+        # in reverse, including the wrap from LiChun back to DaHan.
+        # Each call returns a moment just before the boundary it
+        # names, so the next call steps to the term before it.
+        moment, en, _ = previous_solar_term(utc(2024, 1, 15, 12, 0))
+        assert en == "XiaoHan"
+        moment, en, _ = previous_solar_term(moment)
+        assert en == "DongZhi"
+        moment, en, _ = previous_solar_term(moment)
+        assert en == "DaXue"
+
+    def test_round_trips_with_next_solar_term(self):
+        # next of a previous boundary is that boundary itself, and
+        # previous of a next boundary is that boundary itself.
+        start = utc(2024, 6, 1, 12, 0)
+        prev_moment, prev_en, _ = previous_solar_term(start)
+        next_moment, next_en, _ = next_solar_term(start)
+        assert prev_en == "XiaoMan"
+        assert next_en == "MangZhong"
+        forward = next_solar_term(prev_moment)[0]
+        assert abs((forward - prev_moment).total_seconds()) < 120
+        back_moment, back_en, _ = previous_solar_term(next_moment)
+        assert back_en == next_en
+        assert abs((back_moment - next_moment).total_seconds()) < 120
 
 
 class TestToUtc:
