@@ -18,9 +18,14 @@ print(f"Equation of Time: {result['metadata']['equation_of_time_minutes']} min")
 print(f"Base-60 Day Coordinate: {result['coordinates']['day']['stem']}-{result['coordinates']['day']['branch']}")
 
 # 4. O(1) Relational Computation Example
+from chronos.astronomy import next_solar_terms
 from chronos.cyclic_math import CyclicVariable
 day_var = CyclicVariable(result['coordinates']['day']['index'])
 target_var = CyclicVariable(4) # Arbitrary point in the cyclic group
 
 if day_var.is_clashing(target_var):
     print("Phase Shift (Clash) Detected!")
+
+# 5. Upcoming solar terms after the event
+for moment, name_en, name_cn in next_solar_terms(event_time, 3):
+    print(f"Next term: {name_cn} ({name_en}) at {moment}")
