@@ -195,6 +195,34 @@ def previous_solar_term(dt: datetime) -> tuple[datetime, str, str]:
             lo = mid
     return lo, term[0], term[1]
 
+def previous_solar_terms(dt: datetime, count: int = 1) -> list[tuple[datetime, str, str]]:
+    """
+    Lists the count solar term boundaries at or before a moment,
+    most recent first.
+
+    Chains previous_solar_term: each returned moment sits just before
+    the boundary it names, so the next call steps to the term before
+    it, including the wrap from LiChun back to DaHan. The cursor is
+    nudged one second back between calls so a moment landing exactly
+    on a boundary can never return the same term twice.
+
+    :param dt: Datetime to search backward from; naive inputs are
+        assumed to be UTC.
+    :param count: How many preceding terms to list.
+    :return: List of (moment, english_name, chinese_name), most recent first.
+    :raises TypeError: If count is not an integer.
+    :raises ValueError: If count is less than 1.
+    """
+    _validate_term_count(count)
+    cursor = _to_utc(dt)
+    terms = []
+    for _ in range(count):
+        moment, en, cn = previous_solar_term(cursor)
+        terms.append((moment, en, cn))
+        cursor = moment - timedelta(seconds=1)
+    return terms
+
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

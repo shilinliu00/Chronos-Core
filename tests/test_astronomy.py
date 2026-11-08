@@ -13,6 +13,7 @@ from chronos.astronomy import (
     next_solar_term,
     next_solar_terms,
     previous_solar_term,
+    previous_solar_terms,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -399,6 +400,46 @@ class TestPreviousSolarTerm:
         back_moment, back_en, _ = previous_solar_term(next_moment)
         assert back_en == next_en
         assert abs((back_moment - next_moment).total_seconds()) < 120
+
+
+class TestPreviousSolarTerms:
+    def test_lists_terms_in_reverse_order_with_known_moment(self):
+        terms = previous_solar_terms(utc(2024, 2, 5, 12, 0), 3)
+        assert [en for _, en, _ in terms] == ["LiChun", "DaHan", "XiaoHan"]
+        assert abs((terms[0][0] - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+        assert terms[0][0] > terms[1][0] > terms[2][0]
+
+    def test_wraps_from_lichun_to_dahan(self):
+        terms = previous_solar_terms(utc(2024, 2, 5, 12, 0), 2)
+        assert [en for _, en, _ in terms] == ["LiChun", "DaHan"]
+
+    def test_count_one_matches_single_call(self):
+        start = utc(2024, 6, 1, 12, 0)
+        assert previous_solar_terms(start) == [previous_solar_term(start)]
+
+    def test_matches_repeated_single_calls(self):
+        start = utc(2024, 6, 1, 12, 0)
+        cursor = start
+        expected = []
+        for _ in range(5):
+            moment, en, cn = previous_solar_term(cursor)
+            expected.append((moment, en, cn))
+            cursor = moment - timedelta(seconds=1)
+        assert previous_solar_terms(start, 5) == expected
+
+    def test_naive_input_matches_aware(self):
+        terms = previous_solar_terms(utc(2024, 6, 1, 12, 0), 2)
+        naive = previous_solar_terms(datetime(2024, 6, 1, 12, 0), 2)
+        assert naive == terms
+        assert all(moment.tzinfo is timezone.utc for moment, _, _ in terms)
+
+    def test_invalid_count_rejected(self):
+        with pytest.raises(ValueError):
+            previous_solar_terms(utc(2024, 6, 1, 12, 0), 0)
+        with pytest.raises(ValueError):
+            previous_solar_terms(utc(2024, 6, 1, 12, 0), -2)
+        with pytest.raises(TypeError):
+            previous_solar_terms(utc(2024, 6, 1, 12, 0), "2")
 
 
 class TestToUtc:
