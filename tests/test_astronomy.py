@@ -11,6 +11,7 @@ from chronos.astronomy import (
     solar_term_for_longitude,
     solar_term_type,
     next_solar_term,
+    next_solar_terms,
     previous_solar_term,
     SOLAR_TERMS,
     _to_utc,
@@ -283,6 +284,49 @@ class TestNextSolarTerm:
         assert en == "LiChun"
         moment, en, _ = next_solar_term(moment)
         assert en == "YuShui"
+
+
+class TestNextSolarTerms:
+    def test_lists_terms_in_order_with_known_moments(self):
+        # Same pinned 2024 moments as the single term tests.
+        terms = next_solar_terms(utc(2024, 2, 1, 12, 0), 3)
+        assert [en for _, en, _ in terms] == ["LiChun", "YuShui", "JingZhe"]
+        assert abs((terms[0][0] - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+        assert terms[0][0] < terms[1][0] < terms[2][0]
+
+    def test_wraps_from_dahan_to_lichun(self):
+        terms = next_solar_terms(utc(2024, 12, 18, 12, 0), 3)
+        assert [en for _, en, _ in terms] == ["DongZhi", "XiaoHan", "DaHan"]
+        terms = next_solar_terms(utc(2024, 12, 18, 12, 0), 4)
+        assert terms[3][1] == "LiChun"
+
+    def test_count_one_matches_single_call(self):
+        start = utc(2024, 6, 1, 12, 0)
+        assert next_solar_terms(start) == [next_solar_term(start)]
+
+    def test_matches_repeated_single_calls(self):
+        start = utc(2024, 6, 1, 12, 0)
+        cursor = start
+        expected = []
+        for _ in range(5):
+            moment, en, cn = next_solar_term(cursor)
+            expected.append((moment, en, cn))
+            cursor = moment
+        assert next_solar_terms(start, 5) == expected
+
+    def test_naive_input_matches_aware(self):
+        terms = next_solar_terms(utc(2024, 6, 1, 12, 0), 2)
+        naive = next_solar_terms(datetime(2024, 6, 1, 12, 0), 2)
+        assert naive == terms
+        assert all(moment.tzinfo is timezone.utc for moment, _, _ in terms)
+
+    def test_invalid_count_rejected(self):
+        with pytest.raises(ValueError):
+            next_solar_terms(utc(2024, 6, 1, 12, 0), 0)
+        with pytest.raises(ValueError):
+            next_solar_terms(utc(2024, 6, 1, 12, 0), -2)
+        with pytest.raises(TypeError):
+            next_solar_terms(utc(2024, 6, 1, 12, 0), "3")
 
 
 class TestPreviousSolarTerm:

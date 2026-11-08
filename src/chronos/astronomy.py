@@ -117,6 +117,39 @@ def next_solar_term(dt: datetime) -> tuple[datetime, str, str]:
             hi = mid
     return hi, next_term[0], next_term[1]
 
+def _validate_term_count(count: int) -> None:
+    """Rejects non-integer or non-positive term counts."""
+    if isinstance(count, bool) or not isinstance(count, int):
+        raise TypeError("count must be an integer")
+    if count < 1:
+        raise ValueError(f"count must be at least 1, got {count}")
+
+
+def next_solar_terms(dt: datetime, count: int = 1) -> list[tuple[datetime, str, str]]:
+    """
+    Lists the next count solar term boundaries after a moment.
+
+    Chains next_solar_term: each returned moment sits just after the
+    boundary it names, so the next call steps to the following term,
+    including the wrap from DaHan back to LiChun.
+
+    :param dt: Datetime to search forward from; naive inputs are
+        assumed to be UTC.
+    :param count: How many upcoming terms to list.
+    :return: List of (moment, english_name, chinese_name), earliest first.
+    :raises TypeError: If count is not an integer.
+    :raises ValueError: If count is less than 1.
+    """
+    _validate_term_count(count)
+    cursor = _to_utc(dt)
+    terms = []
+    for _ in range(count):
+        moment, en, cn = next_solar_term(cursor)
+        terms.append((moment, en, cn))
+        cursor = moment
+    return terms
+
+
 def previous_solar_term(dt: datetime) -> tuple[datetime, str, str]:
     """
     Finds the solar term boundary at or before a moment.
