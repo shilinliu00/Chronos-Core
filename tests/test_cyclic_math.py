@@ -219,6 +219,17 @@ class TestArithmetic:
         assert CyclicVariable(59) + 1 == CyclicVariable(0)
         assert CyclicVariable(0) + 60 == CyclicVariable(0)
 
+    def test_radd_matches_add(self):
+        assert 1 + CyclicVariable(59) == CyclicVariable(0)
+        assert 60 + CyclicVariable(0) == CyclicVariable(0)
+        assert -1 + CyclicVariable(0) == CyclicVariable(59)
+
+    def test_radd_rejects_wrong_types(self):
+        with pytest.raises(TypeError):
+            "1" + CyclicVariable(0)
+        with pytest.raises(TypeError):
+            True + CyclicVariable(0)
+
     def test_sub_int_wraps_cycle(self):
         assert CyclicVariable(0) - 1 == CyclicVariable(59)
 

@@ -272,6 +272,10 @@ class CyclicVariable:
             return CyclicVariable(self._index + other)
         raise TypeError("Can only add integers (time deltas) to CyclicVariable")
 
+    def __radd__(self, other: int) -> 'CyclicVariable':
+        """Lets an int sit on the left (e.g., 1 + CyclicVariable(59))."""
+        return self.__add__(other)
+
     def __sub__(self, other: Union['CyclicVariable', int]) -> Union['CyclicVariable', int]:
         """
         Supports calculating temporal distance or shifting backwards.
