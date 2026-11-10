@@ -223,6 +223,75 @@ def previous_solar_terms(dt: datetime, count: int = 1) -> list[tuple[datetime, s
     return terms
 
 
+def _resolve_term_name(term: str) -> tuple[str, str]:
+    """
+    Validates a solar term name and returns its canonical pair.
+
+    English names match case insensitively ("dongzhi", "DongZhi"),
+    Chinese names match exactly ("冬至"); surrounding whitespace is
+    ignored.
+    """
+    if not isinstance(term, str):
+        raise TypeError("term name must be a string")
+    cleaned = term.strip()
+    for en, cn in SOLAR_TERMS:
+        if cleaned.lower() == en.lower() or cleaned == cn:
+            return en, cn
+    raise ValueError(f"unknown solar term {term!r}")
+
+
+def next_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, str]:
+    """
+    Finds the next occurrence of one named solar term after a moment.
+
+    Scans at most one full year of boundaries: the named term occurs
+    exactly once in any 24 consecutive terms, so the first match in
+    next_solar_terms(dt, 24) is the answer. A moment exactly on the
+    named term's boundary returns next year's occurrence, matching
+    next_solar_term.
+
+    :param dt: Datetime to search forward from; naive inputs are
+        assumed to be UTC.
+    :param term: English name (case insensitive, e.g. "DongZhi") or
+        Chinese name (e.g. "冬至").
+    :return: (moment, english_name, chinese_name) of the next
+        occurrence; moment is timezone aware UTC.
+    :raises TypeError: If term is not a string.
+    :raises ValueError: If term names no solar term.
+    """
+    en, _ = _resolve_term_name(term)
+    for moment, term_en, term_cn in next_solar_terms(dt, 24):
+        if term_en == en:
+            return moment, term_en, term_cn
+    raise RuntimeError(f"term {en} not found in a full year of terms")
+
+
+def previous_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, str]:
+    """
+    Finds the most recent occurrence of one named solar term at or
+    before a moment.
+
+    Mirror of next_solar_term_named, scanning backward: the first
+    match in previous_solar_terms(dt, 24) is the answer. A moment
+    exactly on the named term's boundary returns that boundary,
+    matching previous_solar_term.
+
+    :param dt: Datetime to search backward from; naive inputs are
+        assumed to be UTC.
+    :param term: English name (case insensitive, e.g. "DongZhi") or
+        Chinese name (e.g. "冬至").
+    :return: (moment, english_name, chinese_name) of the most recent
+        occurrence; moment is timezone aware UTC.
+    :raises TypeError: If term is not a string.
+    :raises ValueError: If term names no solar term.
+    """
+    en, _ = _resolve_term_name(term)
+    for moment, term_en, term_cn in previous_solar_terms(dt, 24):
+        if term_en == en:
+            return moment, term_en, term_cn
+    raise RuntimeError(f"term {en} not found in a full year of terms")
+
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:

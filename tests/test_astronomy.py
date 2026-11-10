@@ -12,8 +12,10 @@ from chronos.astronomy import (
     solar_term_type,
     next_solar_term,
     next_solar_terms,
+    next_solar_term_named,
     previous_solar_term,
     previous_solar_terms,
+    previous_solar_term_named,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -440,6 +442,102 @@ class TestPreviousSolarTerms:
             previous_solar_terms(utc(2024, 6, 1, 12, 0), -2)
         with pytest.raises(TypeError):
             previous_solar_terms(utc(2024, 6, 1, 12, 0), "2")
+
+
+class TestNextSolarTermNamed:
+    def test_matches_known_2024_term_moments(self):
+        # Same pinned 2024 moments as the unnamed lookup tests.
+        cases = [
+            (utc(2024, 2, 1, 12, 0), "LiChun", utc(2024, 2, 4, 8, 27)),
+            (utc(2024, 6, 1, 12, 0), "DongZhi", utc(2024, 12, 21, 9, 20)),
+            (utc(2024, 6, 1, 12, 0), "XiaZhi", utc(2024, 6, 20, 20, 51)),
+        ]
+        for start, term, expected_moment in cases:
+            moment, en, _ = next_solar_term_named(start, term)
+            assert en == term
+            assert abs((moment - expected_moment).total_seconds()) < 600, (
+                start, term, moment, expected_moment,
+            )
+
+    def test_wraps_into_next_year(self):
+        # No LiChun left in 2024 after Dec 18, so the next one is
+        # 2025-02-03 14:10 UTC.
+        moment, en, cn = next_solar_term_named(utc(2024, 12, 18, 12, 0), "LiChun")
+        assert (en, cn) == ("LiChun", "立春")
+        assert abs((moment - utc(2025, 2, 3, 14, 10)).total_seconds()) < 600
+
+    def test_accepts_chinese_name_and_case(self):
+        moment, en, cn = next_solar_term_named(utc(2024, 12, 18, 12, 0), "冬至")
+        assert (en, cn) == ("DongZhi", "冬至")
+        assert abs((moment - utc(2024, 12, 21, 9, 20)).total_seconds()) < 600
+        assert next_solar_term_named(utc(2024, 12, 18, 12, 0), "dongzhi")[0] == moment
+        assert next_solar_term_named(utc(2024, 12, 18, 12, 0), "  DongZhi  ")[0] == moment
+
+    def test_moment_on_boundary_returns_next_year(self):
+        # Starting exactly at LiChun 2024 must skip to LiChun 2025.
+        moment, en, _ = next_solar_term_named(utc(2024, 2, 4, 8, 27), "LiChun")
+        assert en == "LiChun"
+        assert abs((moment - utc(2025, 2, 3, 14, 10)).total_seconds()) < 600
+
+    def test_unknown_term_rejected(self):
+        with pytest.raises(ValueError):
+            next_solar_term_named(utc(2024, 6, 1, 12, 0), "MidWinter")
+        with pytest.raises(ValueError):
+            next_solar_term_named(utc(2024, 6, 1, 12, 0), "")
+        with pytest.raises(TypeError):
+            next_solar_term_named(utc(2024, 6, 1, 12, 0), 3)
+
+    def test_every_term_name_resolves(self):
+        # Each of the 24 names must find its next occurrence within
+        # a year, in the right order relative to the unnamed lookup.
+        start = utc(2024, 6, 1, 12, 0)
+        for en, cn in SOLAR_TERMS:
+            moment, found_en, found_cn = next_solar_term_named(start, en)
+            assert (found_en, found_cn) == (en, cn)
+            assert moment > start
+            assert moment < start + timedelta(days=366)
+
+
+class TestPreviousSolarTermNamed:
+    def test_matches_known_2024_term_moments(self):
+        cases = [
+            (utc(2024, 2, 5, 12, 0), "LiChun", utc(2024, 2, 4, 8, 27)),
+            (utc(2024, 6, 1, 12, 0), "DongZhi", utc(2023, 12, 22, 3, 27)),
+            (utc(2024, 6, 21, 12, 0), "XiaZhi", utc(2024, 6, 20, 20, 51)),
+        ]
+        for start, term, expected_moment in cases:
+            moment, en, _ = previous_solar_term_named(start, term)
+            assert en == term
+            assert abs((moment - expected_moment).total_seconds()) < 600, (
+                start, term, moment, expected_moment,
+            )
+
+    def test_accepts_chinese_name_and_case(self):
+        moment, en, cn = previous_solar_term_named(utc(2024, 2, 5, 12, 0), "立春")
+        assert (en, cn) == ("LiChun", "立春")
+        assert abs((moment - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+        assert previous_solar_term_named(utc(2024, 2, 5, 12, 0), "lichun")[0] == moment
+
+    def test_moment_on_boundary_returns_that_term(self):
+        moment, en, _ = previous_solar_term_named(utc(2024, 2, 4, 8, 27), "LiChun")
+        assert en == "LiChun"
+        assert abs((moment - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+
+    def test_unknown_term_rejected(self):
+        with pytest.raises(ValueError):
+            previous_solar_term_named(utc(2024, 6, 1, 12, 0), "MidWinter")
+        with pytest.raises(TypeError):
+            previous_solar_term_named(utc(2024, 6, 1, 12, 0), None)
+
+    def test_round_trips_with_next_named(self):
+        # Previous then next of the same named term lands back on
+        # the same boundary, and vice versa.
+        start = utc(2024, 6, 1, 12, 0)
+        prev_moment, _, _ = previous_solar_term_named(start, "DongZhi")
+        assert abs((next_solar_term_named(prev_moment, "DongZhi")[0] - prev_moment).total_seconds()) < 120
+        next_moment, _, _ = next_solar_term_named(start, "DongZhi")
+        back_moment, _, _ = previous_solar_term_named(next_moment, "DongZhi")
+        assert abs((back_moment - next_moment).total_seconds()) < 120
 
 
 class TestToUtc:
