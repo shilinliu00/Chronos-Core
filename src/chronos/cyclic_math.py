@@ -49,7 +49,7 @@ class CyclicVariable:
         The index is normalized into [0, 60), so arithmetic may freely
         overflow the cycle (e.g. CyclicVariable(59) + 1 -> Jia-Zi).
         """
-        if not isinstance(index, int):
+        if isinstance(index, bool) or not isinstance(index, int):
             raise TypeError("CyclicVariable index must be an integer")
         self._index = index % 60
 
@@ -67,7 +67,12 @@ class CyclicVariable:
         A solution exists only when stem and branch share parity, which holds
         by construction in the sexagenary cycle.
         """
-        if not isinstance(stem_idx, int) or not isinstance(branch_idx, int):
+        if (
+            isinstance(stem_idx, bool)
+            or isinstance(branch_idx, bool)
+            or not isinstance(stem_idx, int)
+            or not isinstance(branch_idx, int)
+        ):
             raise TypeError("stem and branch indices must be integers")
         if not 0 <= stem_idx < 10:
             raise ValueError("stem index must be in [0, 10)")
@@ -261,6 +266,8 @@ class CyclicVariable:
 
     def __add__(self, other: int) -> 'CyclicVariable':
         """Supports temporal shifting (e.g., next year -> current + 1)."""
+        if isinstance(other, bool):
+            raise TypeError("Can only add integers (time deltas) to CyclicVariable")
         if isinstance(other, int):
             return CyclicVariable(self._index + other)
         raise TypeError("Can only add integers (time deltas) to CyclicVariable")
@@ -275,6 +282,8 @@ class CyclicVariable:
         if isinstance(other, CyclicVariable):
             # Calculate minimal forward distance in the cycle
             return (self._index - other._index) % 60
+        if isinstance(other, bool):
+            raise TypeError("Unsupported type for subtraction")
         if isinstance(other, int):
             return CyclicVariable(self._index - other)
         raise TypeError("Unsupported type for subtraction")

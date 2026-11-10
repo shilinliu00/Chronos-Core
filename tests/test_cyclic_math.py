@@ -17,6 +17,21 @@ class TestConstruction:
         with pytest.raises(TypeError):
             CyclicVariable("0")
 
+    def test_bool_index_rejected(self):
+        # bool is an int subclass, so True must not silently act as 1.
+        with pytest.raises(TypeError):
+            CyclicVariable(True)
+        with pytest.raises(TypeError):
+            CyclicVariable(False)
+        with pytest.raises(TypeError):
+            CyclicVariable.from_stem_branch(True, 0)
+        with pytest.raises(TypeError):
+            CyclicVariable.from_stem_branch(0, False)
+        with pytest.raises(TypeError):
+            CyclicVariable(0) + True
+        with pytest.raises(TypeError):
+            CyclicVariable(0) - False
+
     def test_from_stem_branch_round_trips_all_sixty(self):
         # Closed-form CRT lookup must agree with the raw index everywhere.
         for i in range(60):
