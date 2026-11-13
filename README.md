@@ -40,6 +40,7 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
 * **Pinyin label parsing:** `CyclicVariable.from_label_en(label)` is the inverse of `stem + branch`, turning a pinyin pillar label such as JiaZi back into its cycle index, and rejecting unknown stems, unknown branches, and parity mismatched pairs. Matching is case insensitive, so `jiazi` and `JIAZI` parse the same way, and surrounding whitespace is ignored.
 * **Ten Gods (十神) layer:** `CyclicVariable.ten_god(other)` judges the classic ten-god relation between two stems from the five-element generation/overcoming cycles plus yin/yang polarity (e.g. 甲日见丙为食神, 甲日见庚为七杀).
 * **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
+* **JSON round trip:** `CyclicVariable.from_json(pillar.to_json())` rebuilds the same pillar; a `label_cn` that disagrees with the index is rejected.
 
 ---
 
@@ -130,7 +131,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-164 tests, 99% coverage. Day-pillar anchors are cross-checked against
+167 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
