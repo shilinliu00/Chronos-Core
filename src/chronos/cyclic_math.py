@@ -325,3 +325,29 @@ class CyclicVariable:
             "na_yin_element": self.na_yin_element,
             "label_cn": f"{self.stem_cn}{self.branch_cn}"
         }
+
+    @classmethod
+    def from_json(cls, data: Dict[str, Any]) -> 'CyclicVariable':
+        """
+        Rebuilds a variable from the dict to_json produces.
+
+        Only the index is needed; when label_cn is present it must
+        agree with the index, so a dict edited by hand cannot
+        silently describe a different pillar.
+
+        :param data: Dict with at least an "index" integer.
+        :raises TypeError: If data is not a dict or index is not an integer.
+        :raises ValueError: If label_cn disagrees with the index.
+        """
+        if not isinstance(data, dict):
+            raise TypeError("json data must be a dict")
+        index = data.get("index")
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("json index must be an integer")
+        variable = cls(index)
+        label = data.get("label_cn")
+        if label is not None and label != str(variable):
+            raise ValueError(
+                f"label_cn {label!r} does not match index {variable.index}"
+            )
+        return variable

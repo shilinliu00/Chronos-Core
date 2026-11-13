@@ -264,6 +264,25 @@ class TestIdentity:
         counts[CyclicVariable(60)] += 1
         assert counts[CyclicVariable(0)] == 4
 
+    def test_from_json_round_trips_all_sixty(self):
+        for i in range(60):
+            v = CyclicVariable(i)
+            assert CyclicVariable.from_json(v.to_json()) == v
+
+    def test_from_json_rejects_bad_data(self):
+        with pytest.raises(TypeError):
+            CyclicVariable.from_json("JiaZi")
+        with pytest.raises(TypeError):
+            CyclicVariable.from_json({})
+        with pytest.raises(TypeError):
+            CyclicVariable.from_json({"index": True})
+        with pytest.raises(TypeError):
+            CyclicVariable.from_json({"index": "0"})
+        with pytest.raises(ValueError):
+            CyclicVariable.from_json({"index": 0, "label_cn": "乙丑"})
+        # Label may be omitted; the index alone rebuilds the pillar.
+        assert CyclicVariable.from_json({"index": 59}) == CyclicVariable(59)
+
     def test_to_json_shape(self):
         j = CyclicVariable(0).to_json()
         assert j == {
