@@ -169,6 +169,13 @@ class TestRelations:
             assert not x.is_clashing(x)
             assert not x.is_combining(x)
 
+    def test_clash_and_combine_reject_wrong_types(self):
+        for bad in (0, "JiaZi", None):
+            with pytest.raises(TypeError):
+                CyclicVariable(0).is_clashing(bad)
+            with pytest.raises(TypeError):
+                CyclicVariable(0).is_combining(bad)
+
     def test_ten_gods_for_yang_day_stem(self):
         # Jia (index 0, yang Wood) day stem against all ten stems.
         day = CyclicVariable(0)

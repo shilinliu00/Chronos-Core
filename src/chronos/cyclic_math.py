@@ -212,7 +212,10 @@ class CyclicVariable:
         In Z_12 (Branches), a clash occurs if the distance is exactly 6 (180 degrees opposite).
         
         :return: Boolean indicating a clash.
+        :raises TypeError: If other is not a CyclicVariable.
         """
+        if not isinstance(other, CyclicVariable):
+            raise TypeError("is_clashing expects a CyclicVariable")
         # (Target - Self) % 12 == 6 implies opposition in the dodecagonal cycle
         return (self.branch_index - other.branch_index) % 12 == 6
 
@@ -222,6 +225,8 @@ class CyclicVariable:
         Mathematical Logic: sum of indices % 12 == 1 (e.g., Zi(0) + Chou(1) = 1)
         Note: This is a simplified algorithmic representation of the Liu He pairs.
         """
+        if not isinstance(other, CyclicVariable):
+            raise TypeError("is_combining expects a CyclicVariable")
         # Standard Liu He pairs: (0,1), (2,11), (3,10), (4,9), (5,8), (6,7)
         # Sum of indices is 1, 13, 25... -> (sum % 12) == 1
         return (self.branch_index + other.branch_index) % 12 == 1
