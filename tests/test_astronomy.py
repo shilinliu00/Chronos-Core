@@ -16,6 +16,8 @@ from chronos.astronomy import (
     previous_solar_term,
     previous_solar_terms,
     previous_solar_term_named,
+    next_solar_terms_named,
+    previous_solar_terms_named,
     SOLAR_TERMS,
     _to_utc,
 )
@@ -538,6 +540,110 @@ class TestPreviousSolarTermNamed:
         next_moment, _, _ = next_solar_term_named(start, "DongZhi")
         back_moment, _, _ = previous_solar_term_named(next_moment, "DongZhi")
         assert abs((back_moment - next_moment).total_seconds()) < 120
+
+
+class TestNextSolarTermsNamed:
+    def test_lists_yearly_occurrences_earliest_first(self):
+        # Winter solstices come about 365 days apart; the first one
+        # matches the pinned 2024 moment from the single call.
+        start = utc(2024, 6, 1, 12, 0)
+        terms = next_solar_terms_named(start, "DongZhi", 3)
+        assert len(terms) == 3
+        assert all(en == "DongZhi" and cn == "冬至" for _, en, cn in terms)
+        moments = [moment for moment, _, _ in terms]
+        assert moments == sorted(moments)
+        assert abs((moments[0] - utc(2024, 12, 21, 9, 20)).total_seconds()) < 600
+        for earlier, later in zip(moments, moments[1:]):
+            gap = (later - earlier).total_seconds() / 86400
+            assert 364 < gap < 367, (earlier, later, gap)
+
+    def test_count_one_matches_single_call(self):
+        start = utc(2024, 6, 1, 12, 0)
+        assert next_solar_terms_named(start, "LiChun", 1) == [
+            next_solar_term_named(start, "LiChun")
+        ]
+
+    def test_matches_repeated_single_calls(self):
+        start = utc(2024, 6, 1, 12, 0)
+        terms = next_solar_terms_named(start, "XiaZhi", 2)
+        first = next_solar_term_named(start, "XiaZhi")
+        second = next_solar_term_named(first[0], "XiaZhi")
+        assert terms[0] == first
+        assert terms[1] == second
+
+    def test_accepts_chinese_name(self):
+        terms = next_solar_terms_named(utc(2024, 6, 1, 12, 0), "冬至", 2)
+        assert [en for _, en, _ in terms] == ["DongZhi", "DongZhi"]
+
+    def test_moment_on_boundary_starts_next_year(self):
+        # Starting exactly at LiChun 2024 must skip to LiChun 2025.
+        terms = next_solar_terms_named(utc(2024, 2, 4, 8, 27), "LiChun", 2)
+        assert abs((terms[0][0] - utc(2025, 2, 3, 14, 10)).total_seconds()) < 600
+        assert terms[1][0] > terms[0][0] + timedelta(days=364)
+
+    def test_invalid_count_and_term_rejected(self):
+        with pytest.raises(ValueError):
+            next_solar_terms_named(utc(2024, 6, 1, 12, 0), "DongZhi", 0)
+        with pytest.raises(TypeError):
+            next_solar_terms_named(utc(2024, 6, 1, 12, 0), "DongZhi", "2")
+        with pytest.raises(ValueError):
+            next_solar_terms_named(utc(2024, 6, 1, 12, 0), "MidWinter", 2)
+        with pytest.raises(TypeError):
+            next_solar_terms_named(utc(2024, 6, 1, 12, 0), 3, 2)
+
+
+class TestPreviousSolarTermsNamed:
+    def test_lists_yearly_occurrences_most_recent_first(self):
+        # The most recent winter solstices before mid 2024, with the
+        # first one matching the pinned 2023 moment.
+        start = utc(2024, 6, 1, 12, 0)
+        terms = previous_solar_terms_named(start, "DongZhi", 3)
+        assert len(terms) == 3
+        assert all(en == "DongZhi" and cn == "冬至" for _, en, cn in terms)
+        moments = [moment for moment, _, _ in terms]
+        assert moments == sorted(moments, reverse=True)
+        assert abs((moments[0] - utc(2023, 12, 22, 3, 27)).total_seconds()) < 600
+        for later, earlier in zip(moments, moments[1:]):
+            gap = (later - earlier).total_seconds() / 86400
+            assert 364 < gap < 367, (later, earlier, gap)
+
+    def test_count_one_matches_single_call(self):
+        start = utc(2024, 6, 1, 12, 0)
+        assert previous_solar_terms_named(start, "LiChun", 1) == [
+            previous_solar_term_named(start, "LiChun")
+        ]
+
+    def test_matches_repeated_single_calls(self):
+        start = utc(2024, 6, 1, 12, 0)
+        terms = previous_solar_terms_named(start, "XiaZhi", 2)
+        first = previous_solar_term_named(start, "XiaZhi")
+        second = previous_solar_term_named(
+            first[0] - timedelta(seconds=1), "XiaZhi"
+        )
+        assert terms[0] == first
+        assert terms[1] == second
+
+    def test_moment_on_boundary_returns_that_occurrence_first(self):
+        terms = previous_solar_terms_named(utc(2024, 2, 4, 8, 27), "LiChun", 2)
+        assert abs((terms[0][0] - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+        assert terms[1][0] < terms[0][0] - timedelta(days=364)
+
+    def test_invalid_count_and_term_rejected(self):
+        with pytest.raises(ValueError):
+            previous_solar_terms_named(utc(2024, 6, 1, 12, 0), "DongZhi", 0)
+        with pytest.raises(ValueError):
+            previous_solar_terms_named(utc(2024, 6, 1, 12, 0), "MidWinter", 2)
+        with pytest.raises(TypeError):
+            previous_solar_terms_named(utc(2024, 6, 1, 12, 0), None, 2)
+
+    def test_round_trips_with_next_named_list(self):
+        # Previous list then next list of the same named term lands
+        # back on the same boundaries, within bisection tolerance.
+        start = utc(2024, 6, 1, 12, 0)
+        prev = previous_solar_terms_named(start, "DongZhi", 2)
+        nxt = next_solar_terms_named(prev[0][0], "DongZhi", 2)
+        assert abs((nxt[0][0] - prev[0][0]).total_seconds()) < 120
+        assert abs((nxt[1][0] - next_solar_term_named(nxt[0][0], "DongZhi")[0]).total_seconds()) < 120
 
 
 class TestToUtc:

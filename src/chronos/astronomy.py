@@ -292,6 +292,66 @@ def previous_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, s
     raise RuntimeError(f"term {en} not found in a full year of terms")
 
 
+def next_solar_terms_named(dt: datetime, term: str, count: int = 1) -> list[tuple[datetime, str, str]]:
+    """
+    Lists the next count occurrences of one named solar term after a moment.
+
+    Chains next_solar_term_named: each returned moment sits just after
+    the boundary it names, so the next call steps to the following year,
+    about 365 days later. A moment exactly on the named term's boundary
+    returns next year's occurrence first, matching next_solar_term_named.
+
+    :param dt: Datetime to search forward from; naive inputs are
+        assumed to be UTC.
+    :param term: English name (case insensitive, e.g. "DongZhi") or
+        Chinese name (e.g. "冬至").
+    :param count: How many occurrences to list.
+    :return: List of (moment, english_name, chinese_name), earliest first.
+    :raises TypeError: If term is not a string or count is not an integer.
+    :raises ValueError: If term names no solar term or count is less than 1.
+    """
+    _validate_term_count(count)
+    en, _ = _resolve_term_name(term)
+    cursor = _to_utc(dt)
+    terms = []
+    for _ in range(count):
+        moment, term_en, term_cn = next_solar_term_named(cursor, en)
+        terms.append((moment, term_en, term_cn))
+        cursor = moment
+    return terms
+
+
+def previous_solar_terms_named(dt: datetime, term: str, count: int = 1) -> list[tuple[datetime, str, str]]:
+    """
+    Lists the count most recent occurrences of one named solar term at
+    or before a moment, most recent first.
+
+    Chains previous_solar_term_named: each returned moment sits just
+    before the boundary it names, so the next call steps to the year
+    before. The cursor is nudged one second back between calls so a
+    moment landing exactly on a boundary can never return the same
+    occurrence twice.
+
+    :param dt: Datetime to search backward from; naive inputs are
+        assumed to be UTC.
+    :param term: English name (case insensitive, e.g. "DongZhi") or
+        Chinese name (e.g. "冬至").
+    :param count: How many occurrences to list.
+    :return: List of (moment, english_name, chinese_name), most recent first.
+    :raises TypeError: If term is not a string or count is not an integer.
+    :raises ValueError: If term names no solar term or count is less than 1.
+    """
+    _validate_term_count(count)
+    en, _ = _resolve_term_name(term)
+    cursor = _to_utc(dt)
+    terms = []
+    for _ in range(count):
+        moment, term_en, term_cn = previous_solar_term_named(cursor, en)
+        terms.append((moment, term_en, term_cn))
+        cursor = moment - timedelta(seconds=1)
+    return terms
+
+
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
     if dt.tzinfo is None:
