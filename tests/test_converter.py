@@ -510,3 +510,20 @@ class TestClassicTables:
                 for k in range(60)]
         assert days == list(range(60))
         assert plain._get_day_index(utc(2024, 1, 1, 12, 0) + timedelta(days=60)) == 0
+
+    def test_day_pillar_advances_across_leap_day(self, plain):
+        # 2024 is a leap year: Feb 29 counts as one day in the
+        # continuous day pillar count, so the pillars run 58, 59, 0
+        # across Feb 28, Feb 29 and Mar 1 with no skip or repeat.
+        days = [plain._get_day_index(utc(2024, 2, 28, 12, 0) + timedelta(days=k))
+                for k in range(3)]
+        assert days == [58, 59, 0]
+        assert labels(CyclicVariable(days[1]).to_json()) == "GuiHai"
+        res = plain.get_coordinates(utc(2024, 2, 29, 12, 0), 0.0)
+        assert labels(res["coordinates"]["day"]) == "GuiHai"
+
+    def test_day_pillar_advances_across_feb_28_in_common_year(self, plain):
+        # 2023 has no Feb 29: Feb 28 to Mar 1 is one step, not two.
+        feb28 = plain._get_day_index(utc(2023, 2, 28, 12, 0))
+        mar1 = plain._get_day_index(utc(2023, 3, 1, 12, 0))
+        assert (mar1 - feb28) % 60 == 1
