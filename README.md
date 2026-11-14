@@ -28,6 +28,7 @@ Chronos-Core calculates absolute Earth-Sun orbital mechanics to define strict te
 * **Previous solar term:** `previous_solar_term(dt)` is the mirror image, bisecting backward to find the moment (aware UTC) and name of the term boundary at or before a moment, good to roughly a minute; a moment exactly on a boundary returns that boundary's term, and the returned moment sits just before the boundary so chaining calls walks the table backward.
 * **Term lists:** `next_solar_terms(dt, count)` lists the next `count` term boundaries after a moment, earliest first; `previous_solar_terms(dt, count)` lists the `count` boundaries at or before a moment, most recent first. Both chain the single term lookups, including the DaHan to LiChun wrap, so a full year of terms is one call.
 * **Named solar term:** `next_solar_term_named(dt, "DongZhi")` finds the next winter solstice after a moment, and `previous_solar_term_named(dt, term)` is the mirror image, returning the most recent occurrence at or before a moment. Names take the English term (case insensitive) or the Chinese term (e.g. "冬至"), so the next LiChun year boundary is one call away.
+* **Named term lists:** `next_solar_terms_named(dt, "DongZhi", 3)` lists the next three winter solstices, about a year apart, and `previous_solar_terms_named(dt, term, count)` is the mirror image, most recent first. Both chain the single named lookups, so a moment exactly on the boundary starts the next list at next year's occurrence and ends the previous list at that occurrence.
 
 ### 2. $\mathbb{Z}_{60}$ Modular Arithmetic Engine
 Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
@@ -131,7 +132,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-167 tests, 99% coverage. Day-pillar anchors are cross-checked against
+181 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
