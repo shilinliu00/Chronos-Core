@@ -140,6 +140,13 @@ class TestEquationOfTime:
             with pytest.raises(ValueError):
                 calculate_equation_of_time(bad)
 
+    def test_non_integer_day_rejected(self):
+        # A bool is an int subclass and a float day is meaningless here,
+        # so both must fail loudly instead of silently computing.
+        for bad in (True, False, 32.5, "32", None):
+            with pytest.raises(TypeError):
+                calculate_equation_of_time(bad)
+
     def test_year_endpoints_accepted(self):
         assert calculate_equation_of_time(1) == pytest.approx(-3.7, abs=1.0)
         assert calculate_equation_of_time(366) == pytest.approx(-3.7, abs=1.0)
