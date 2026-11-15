@@ -43,6 +43,13 @@ class CyclicVariable:
     # Element Vector: 0-1 Wood, 2-3 Fire, 4-5 Earth, 6-7 Metal, 8-9 Water
     ELEMENT_VECTOR = ["Wood", "Wood", "Fire", "Fire", "Earth", "Earth", "Metal", "Metal", "Water", "Water"]
 
+    # Stems longest first, computed once: "Ji" is a prefix of "Jia", so a
+    # label split must try "Jia" before "Ji". Sorted here so parsing a
+    # label does not sort the stem list again on every call.
+    _STEMS_LONGEST_FIRST = sorted(
+        enumerate(STEMS), key=lambda pair: -len(pair[1])
+    )
+
     def __init__(self, index: int):
         """
         Creates a variable from a raw position in Z_60.
@@ -137,10 +144,7 @@ class CyclicVariable:
         if not isinstance(label, str):
             raise TypeError("label must be a string")
         normalized = label.strip().lower()
-        stems_longest_first = sorted(
-            enumerate(cls.STEMS), key=lambda pair: -len(pair[1])
-        )
-        for stem_idx, stem in stems_longest_first:
+        for stem_idx, stem in cls._STEMS_LONGEST_FIRST:
             stem_lower = stem.lower()
             if not normalized.startswith(stem_lower):
                 continue
