@@ -133,12 +133,15 @@ class TemporalCoordinateEngine:
         :param dt: Input datetime. Naive datetimes are assumed to be UTC;
         aware datetimes are converted to UTC before the pipeline runs.
         :param longitude: Observer's longitude for Solar Time correction.
+        :raises TypeError: If longitude is not a real number.
         :raises ValueError: If longitude is outside [-180, 180] degrees.
         """
         # Normalize first: the astronomy layer already converts aware
         # inputs, but the clock readings below (year/month/day/hour)
         # would otherwise follow the input's local timezone.
         dt = _to_utc(dt)
+        if isinstance(longitude, bool) or not isinstance(longitude, (int, float)):
+            raise TypeError("longitude must be a number")
         if not -180.0 <= longitude <= 180.0:
             raise ValueError(
                 f"longitude must be within [-180, 180], got {longitude}"

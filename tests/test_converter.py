@@ -339,6 +339,13 @@ class TestPipeline:
         with pytest.raises(ValueError):
             plain.get_coordinates(utc(2024, 1, 1, 12, 0), -180.1)
 
+    def test_bool_longitude_rejected(self, plain):
+        # True would otherwise pass as 1.0 degrees east, including in
+        # non precise mode where the astronomy layer never sees it.
+        for bad in (True, False, "120.0", None):
+            with pytest.raises(TypeError):
+                plain.get_coordinates(utc(2024, 1, 1, 12, 0), bad)
+
     def test_longitude_endpoints_accepted(self, plain):
         for lon in (-180.0, 180.0):
             res = plain.get_coordinates(utc(2024, 1, 1, 12, 0), lon)

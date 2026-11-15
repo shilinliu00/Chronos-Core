@@ -449,8 +449,11 @@ def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     :param longitude: Observer's longitude (East positive, West negative).
     :return: Naive datetime representing Local Apparent Solar Time at that
         location (tzinfo is stripped because the value is no longer UTC).
+    :raises TypeError: If longitude is not a real number.
     :raises ValueError: If longitude is outside [-180, 180] degrees.
     """
+    if isinstance(longitude, bool) or not isinstance(longitude, (int, float)):
+        raise TypeError("longitude must be a number")
     if not -180.0 <= longitude <= 180.0:
         raise ValueError(
             f"longitude must be within [-180, 180], got {longitude}"
