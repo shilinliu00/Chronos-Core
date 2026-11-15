@@ -241,6 +241,15 @@ class TestSolarTerms:
             with pytest.raises(ValueError):
                 solar_term_for_longitude(bad)
 
+    def test_bool_longitude_rejected(self):
+        # True would otherwise pass as 1.0 degrees; both lookups share
+        # the same index helper, so both must reject it.
+        for bad in (True, False, "315.0", None):
+            with pytest.raises(TypeError):
+                solar_term_for_longitude(bad)
+            with pytest.raises(TypeError):
+                solar_term_type(bad)
+
     def test_term_type_alternates_jie_qi(self):
         # The table starts at LiChun (a Jie) and alternates: even indices
         # are Jie terms (month pillar boundaries), odd ones are Qi terms.

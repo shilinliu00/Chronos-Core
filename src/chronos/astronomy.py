@@ -39,6 +39,8 @@ def _solar_term_index(lon_degrees: float) -> int:
     int(((lon - 315) % 360) / 15). Shared by the name and type lookups
     so both stay consistent by construction.
     """
+    if isinstance(lon_degrees, bool) or not isinstance(lon_degrees, (int, float)):
+        raise TypeError("longitude must be a number")
     if not 0.0 <= lon_degrees < 360.0:
         raise ValueError(
             f"longitude must be in [0, 360), got {lon_degrees}"
@@ -57,6 +59,7 @@ def solar_term_for_longitude(lon_degrees: float) -> tuple[str, str]:
 
     :param lon_degrees: Solar ecliptic longitude in [0, 360).
     :return: (english_name, chinese_name) of the current term.
+    :raises TypeError: If longitude is not a real number.
     :raises ValueError: If longitude is outside [0, 360).
     """
     return SOLAR_TERMS[_solar_term_index(lon_degrees)]
@@ -72,6 +75,7 @@ def solar_term_type(lon_degrees: float) -> str:
 
     :param lon_degrees: Solar ecliptic longitude in [0, 360).
     :return: "Jie" or "Qi".
+    :raises TypeError: If longitude is not a real number.
     :raises ValueError: If longitude is outside [0, 360).
     """
     return "Jie" if _solar_term_index(lon_degrees) % 2 == 0 else "Qi"
