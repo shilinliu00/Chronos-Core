@@ -680,3 +680,24 @@ class TestToUtc:
         beijing = timezone(timedelta(hours=8))
         out = _to_utc(datetime(2024, 1, 1, 8, 0, tzinfo=beijing))
         assert out == datetime(2024, 1, 1, 0, 0, tzinfo=tz.utc)
+
+    def test_non_datetime_rejected(self):
+        # A string or int used to fail deep inside with an AttributeError
+        # about tzinfo; the guard turns it into a plain TypeError.
+        for bad in ("2024-01-01", 1704110400, None, True):
+            with pytest.raises(TypeError):
+                _to_utc(bad)
+
+    def test_non_datetime_rejected_by_public_functions(self):
+        # _to_utc is the single choke point, so every public entry that
+        # takes a datetime inherits the guard.
+        for fn in (
+            calculate_solar_longitude,
+            calculate_solar_declination,
+            next_solar_term,
+            previous_solar_term,
+        ):
+            with pytest.raises(TypeError):
+                fn("2024-01-01")
+        with pytest.raises(TypeError):
+            get_true_solar_time(1704110400, 0.0)

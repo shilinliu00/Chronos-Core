@@ -358,6 +358,8 @@ def previous_solar_terms_named(dt: datetime, term: str, count: int = 1) -> list[
 
 def _to_utc(dt: datetime) -> datetime:
     """Helper to enforce UTC timezone on inputs to prevent localization bugs."""
+    if not isinstance(dt, datetime):
+        raise TypeError("datetime input must be a datetime")
     if dt.tzinfo is None:
         # Assume naive datetime is UTC to avoid ambiguity
         return dt.replace(tzinfo=timezone.utc)
