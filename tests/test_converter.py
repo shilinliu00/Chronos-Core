@@ -383,6 +383,14 @@ class TestTimestampInput:
         assert plain.get_coordinates_from_timestamp(ts, 0.0) == single
         assert labels(single["coordinates"]["day"]) == "GuiYou"
 
+    def test_bool_and_non_number_timestamp_rejected(self, plain):
+        # True would otherwise pass as timestamp 1, one second after
+        # the epoch, and a string fails inside fromtimestamp with a
+        # confusing message instead of a plain TypeError.
+        for bad in (True, False, "1704110400", None):
+            with pytest.raises(TypeError):
+                plain.get_coordinates_from_timestamp(bad, 0.0)
+
 
 class TestBatchConversion:
     def test_batch_matches_single_calls(self, plain):

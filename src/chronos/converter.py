@@ -213,7 +213,10 @@ class TemporalCoordinateEngine:
         select dates before the epoch.
         :param longitude: Observer's longitude for Solar Time correction.
         :return: Same result dict as get_coordinates.
+        :raises TypeError: If ts is not a real number.
         """
+        if isinstance(ts, bool) or not isinstance(ts, (int, float)):
+            raise TypeError("timestamp must be a number")
         return self.get_coordinates(
             datetime.fromtimestamp(ts, tz=timezone.utc), longitude
         )
