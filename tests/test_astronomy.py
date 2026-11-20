@@ -322,6 +322,20 @@ class TestNextSolarTerm:
         assert en == "YuShui"
         assert moment > utc(2024, 2, 4, 8, 27)
 
+    def test_exact_boundary_takes_a_full_fifteen_degree_step(self, monkeypatch):
+        # No real datetime lands on a boundary to the float, so the
+        # delta == 0 branch is only reachable by stubbing the kernel:
+        # with longitude pinned exactly at 315 degrees the next
+        # boundary is a full 15 degrees ahead, YuShui, and the search
+        # bracket runs its whole 17 days.
+        monkeypatch.setattr(
+            "chronos.astronomy.calculate_solar_longitude", lambda dt: 315.0
+        )
+        start = utc(2024, 2, 4, 12, 0)
+        moment, en, cn = next_solar_term(start)
+        assert (en, cn) == ("YuShui", "雨水")
+        assert moment == start + timedelta(days=17)
+
     def test_successive_calls_walk_the_term_table(self):
         # Chaining next_solar_term must step through the table in
         # order, including the wrap from DaHan back to LiChun.
@@ -408,6 +422,18 @@ class TestPreviousSolarTerm:
         moment, en, _ = previous_solar_term(utc(2024, 2, 4, 8, 27))
         assert en == "LiChun"
         assert abs((moment - utc(2024, 2, 4, 8, 27)).total_seconds()) < 600
+
+    def test_exact_boundary_returns_the_term_itself(self, monkeypatch):
+        # Same stub as the next term test: with longitude pinned
+        # exactly at 315 degrees the delta == 0 branch returns the
+        # starting moment itself as LiChun, with no bisection.
+        monkeypatch.setattr(
+            "chronos.astronomy.calculate_solar_longitude", lambda dt: 315.0
+        )
+        start = utc(2024, 2, 4, 12, 0)
+        moment, en, cn = previous_solar_term(start)
+        assert (en, cn) == ("LiChun", "立春")
+        assert moment == start
 
     def test_name_matches_term_in_force(self):
         # The returned term must always be the one
