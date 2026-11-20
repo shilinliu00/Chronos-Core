@@ -23,7 +23,7 @@ Standard `datetime` libraries assume a linear progression of time and rely on ad
 Chronos-Core calculates absolute Earth-Sun orbital mechanics to define strict temporal boundaries:
 * **Equation of Time (EoT):** Corrects the discrepancy between Mean Solar Time (clock) and Apparent Solar Time (sundial) caused by Earth's orbital eccentricity. Essential for sub-hour precision during temporal boundary transitions.
 * **Solar Ecliptic Longitude ($\lambda$):** Computes exact solar positioning relative to the J2000.0 epoch. The annual cycle strictly resets at $\lambda = 315^\circ$ (LiChun, Start of Spring), dynamically resolving the "Year Boundary" edge cases.
-* **Solar Declination ($\delta$):** Derives the Sun's celestial latitude from $\lambda$ via $\delta = \arcsin(\sin\varepsilon \cdot \sin\lambda)$, with the J2000 mean obliquity $\varepsilon = 23.4393^\circ$. Available as `calculate_solar_declination` for seasonal boundary diagnostics.
+* **Solar Declination ($\delta$):** Derives the Sun's celestial latitude from $\lambda$ via $\delta = \arcsin(\sin\varepsilon \cdot \sin\lambda)$, with the J2000 mean obliquity $\varepsilon = 23.4393^\circ$. Available as `calculate_solar_declination` for seasonal boundary diagnostics; it takes an optional precomputed longitude, so callers that already have $\lambda$ skip recomputing it.
 * **Next solar term:** `next_solar_term(dt)` bisects solar longitude to find the moment (aware UTC) and name of the next 24 solar term boundary, good to roughly a minute; a moment exactly on a boundary returns the following term.
 * **Previous solar term:** `previous_solar_term(dt)` is the mirror image, bisecting backward to find the moment (aware UTC) and name of the term boundary at or before a moment, good to roughly a minute; a moment exactly on a boundary returns that boundary's term, and the returned moment sits just before the boundary so chaining calls walks the table backward.
 * **Term lists:** `next_solar_terms(dt, count)` lists the next `count` term boundaries after a moment, earliest first; `previous_solar_terms(dt, count)` lists the `count` boundaries at or before a moment, most recent first. Both chain the single term lookups, including the DaHan to LiChun wrap, so a full year of terms is one call.
@@ -132,7 +132,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-188 tests, 99% coverage. Day-pillar anchors are cross-checked against
+194 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
