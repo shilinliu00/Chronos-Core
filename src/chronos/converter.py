@@ -9,6 +9,7 @@ Implements the classic algorithms:
 3. "Five Rats Chasing Hour" (Wu Zi Dun) for Hour Stem derivation.
 """
 
+import math
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Iterable, List
 
@@ -214,9 +215,15 @@ class TemporalCoordinateEngine:
         :param longitude: Observer's longitude for Solar Time correction.
         :return: Same result dict as get_coordinates.
         :raises TypeError: If ts is not a real number.
+        :raises ValueError: If ts is not finite, or outside the range
+            datetime.fromtimestamp can represent on this platform.
         """
         if isinstance(ts, bool) or not isinstance(ts, (int, float)):
             raise TypeError("timestamp must be a number")
-        return self.get_coordinates(
-            datetime.fromtimestamp(ts, tz=timezone.utc), longitude
-        )
+        if not math.isfinite(ts):
+            raise ValueError("timestamp must be finite")
+        try:
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+        except (OverflowError, OSError) as exc:
+            raise ValueError(f"timestamp {ts} is out of range") from exc
+        return self.get_coordinates(dt, longitude)

@@ -391,6 +391,22 @@ class TestTimestampInput:
             with pytest.raises(TypeError):
                 plain.get_coordinates_from_timestamp(bad, 0.0)
 
+    def test_non_finite_timestamp_rejected(self, plain):
+        # NaN and infinities are floats, so they pass the type check
+        # and would otherwise fail deep inside fromtimestamp with a
+        # cryptic message; reject them up front with a plain ValueError.
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            with pytest.raises(ValueError):
+                plain.get_coordinates_from_timestamp(bad, 0.0)
+
+    def test_out_of_range_timestamp_rejected(self, plain):
+        # A huge timestamp would otherwise leak a platform dependent
+        # OverflowError from fromtimestamp; surface it as a ValueError
+        # with the offending value in the message.
+        for bad in (10**20, -10**20):
+            with pytest.raises(ValueError, match="out of range"):
+                plain.get_coordinates_from_timestamp(bad, 0.0)
+
 
 class TestBatchConversion:
     def test_batch_matches_single_calls(self, plain):
