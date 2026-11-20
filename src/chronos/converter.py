@@ -184,7 +184,7 @@ class TemporalCoordinateEngine:
                 "solar_term": term_en,
                 "solar_term_cn": term_cn,
                 "solar_term_type": solar_term_type(solar_lambda),
-                "solar_declination_deg": round(calculate_solar_declination(dt), 4),
+                "solar_declination_deg": round(calculate_solar_declination(dt, solar_lambda), 4),
                 "equation_of_time_minutes": round(eot_minutes, 3),
                 "longitude": longitude
             },

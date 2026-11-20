@@ -8,6 +8,7 @@ temporal boundaries (solar terms) for the cyclic coordinates.
 
 import math
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 # Astronomical Constants
 J2000_EPOCH = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -424,7 +425,7 @@ def calculate_solar_longitude(dt: datetime) -> float:
     
     return lambda_degrees % 360.0
 
-def calculate_solar_declination(dt: datetime) -> float:
+def calculate_solar_declination(dt: datetime, solar_longitude_deg: Optional[float] = None) -> float:
     """
     Calculates the Sun's declination (celestial latitude).
 
@@ -433,9 +434,25 @@ def calculate_solar_declination(dt: datetime) -> float:
     and λ is the geometric ecliptic longitude from calculate_solar_longitude.
 
     :param dt: UTC Datetime.
+    :param solar_longitude_deg: Optional precomputed ecliptic longitude
+        in [0, 360). Callers that already have lambda (the converter
+        does) pass it here instead of recomputing it from dt.
     :return: Declination in degrees, within [-23.44, 23.44].
+    :raises TypeError: If dt is not a datetime, or the longitude is
+        not a real number.
+    :raises ValueError: If the longitude is outside [0, 360).
     """
-    lambda_degrees = calculate_solar_longitude(dt)
+    dt_utc = _to_utc(dt)
+    if solar_longitude_deg is None:
+        lambda_degrees = calculate_solar_longitude(dt_utc)
+    else:
+        if isinstance(solar_longitude_deg, bool) or not isinstance(solar_longitude_deg, (int, float)):
+            raise TypeError("solar longitude must be a number")
+        if not 0.0 <= solar_longitude_deg < 360.0:
+            raise ValueError(
+                f"solar longitude must be in [0, 360), got {solar_longitude_deg}"
+            )
+        lambda_degrees = float(solar_longitude_deg)
     sin_delta = (
         math.sin(math.radians(J2000_OBLIQUITY))
         * math.sin(math.radians(lambda_degrees))

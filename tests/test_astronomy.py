@@ -94,6 +94,25 @@ class TestSolarDeclination:
         assert calculate_solar_declination(utc(2024, 9, 21, 12, 0)) > 0
         assert calculate_solar_declination(utc(2024, 9, 23, 12, 0)) < 0
 
+    def test_accepts_precomputed_longitude(self):
+        # A caller that already has lambda (the converter does) must
+        # get the same declination without recomputing it from dt.
+        dt = utc(2024, 6, 21, 12, 0)
+        lam = calculate_solar_longitude(dt)
+        assert calculate_solar_declination(dt, lam) == calculate_solar_declination(dt)
+        assert calculate_solar_declination(dt, 90.0) == pytest.approx(
+            23.4393, abs=0.01
+        )
+
+    def test_precomputed_longitude_validated(self):
+        dt = utc(2024, 6, 21, 12, 0)
+        for bad in (-1.0, 360.0):
+            with pytest.raises(ValueError):
+                calculate_solar_declination(dt, bad)
+        for bad in (True, "90"):
+            with pytest.raises(TypeError):
+                calculate_solar_declination(dt, bad)
+
     def test_monotonic_increase_over_a_day(self):
         a = calculate_solar_longitude(utc(2024, 6, 1, 0, 0))
         b = calculate_solar_longitude(utc(2024, 6, 2, 0, 0))
