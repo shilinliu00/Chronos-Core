@@ -5,6 +5,7 @@ import pytest
 
 from chronos.astronomy import (
     calculate_equation_of_time,
+    calculate_equation_of_time_at,
     calculate_solar_longitude,
     calculate_solar_declination,
     get_true_solar_time,
@@ -169,6 +170,49 @@ class TestEquationOfTime:
     def test_year_endpoints_accepted(self):
         assert calculate_equation_of_time(1) == pytest.approx(-3.7, abs=1.0)
         assert calculate_equation_of_time(366) == pytest.approx(-3.7, abs=1.0)
+
+
+class TestEquationOfTimeAt:
+    def test_midnight_agrees_with_day_based_value(self):
+        # At 00:00 the fractional day is exactly the integer day.
+        for doy in (1, 32, 105, 306, 365):
+            dt = datetime(2024, 1, 1, tzinfo=timezone.utc) + timedelta(
+                days=doy - 1
+            )
+            assert calculate_equation_of_time_at(dt) == pytest.approx(
+                calculate_equation_of_time(doy)
+            )
+
+    def test_noon_drifts_from_midnight_value(self):
+        # The EoT moves a few hundredths of a minute through the day,
+        # so noon must differ from the midnight value but stay close.
+        dt = utc(2024, 2, 11, 12, 0)
+        noon = calculate_equation_of_time_at(dt)
+        assert noon != calculate_equation_of_time(42)
+        assert abs(noon - calculate_equation_of_time(42)) < 0.1
+
+    def test_bounded_all_year(self):
+        for doy in range(1, 367):
+            dt = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc) + timedelta(
+                days=doy - 1
+            )
+            assert -17.0 < calculate_equation_of_time_at(dt) < 17.0
+
+    def test_naive_assumed_utc_and_aware_converted(self):
+        naive = datetime(2024, 6, 1, 12, 0)
+        aware = utc(2024, 6, 1, 12, 0)
+        assert calculate_equation_of_time_at(naive) == calculate_equation_of_time_at(
+            aware
+        )
+        shifted = datetime(2024, 6, 1, 20, 0, tzinfo=timezone(timedelta(hours=8)))
+        assert calculate_equation_of_time_at(shifted) == calculate_equation_of_time_at(
+            aware
+        )
+
+    def test_non_datetime_rejected(self):
+        for bad in ("2024-06-01", 1717243200, None):
+            with pytest.raises(TypeError):
+                calculate_equation_of_time_at(bad)
 
 
 class TestTrueSolarTime:

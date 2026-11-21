@@ -388,12 +388,47 @@ def calculate_equation_of_time(day_of_year: int) -> float:
         )
     # B parameter approximation (Smart, 1977)
     # B represents the mean anomaly of the Earth relative to the perihelion.
-    B = 2.0 * math.pi * (day_of_year - 81) / 365.0
-    
+    return _equation_of_time_for_day_number(float(day_of_year))
+
+
+def _equation_of_time_for_day_number(day_number: float) -> float:
+    """
+    Smart (1977) formula for a (possibly fractional) day of year.
+
+    The day based entry point passes an integer day; the datetime
+    entry point passes the day plus the fraction of the day elapsed,
+    so the EoT tracks its smooth drift instead of stepping at
+    midnight.
+    """
+    B = 2.0 * math.pi * (day_number - 81) / 365.0
+
     # EoT Formula: E = 9.87sin(2B) - 7.53cos(B) - 1.5sin(B)
-    eot_minutes = (9.87 * math.sin(2.0 * B)) - (7.53 * math.cos(B)) - (1.5 * math.sin(B))
-    
-    return eot_minutes
+    return (9.87 * math.sin(2.0 * B)) - (7.53 * math.cos(B)) - (1.5 * math.sin(B))
+
+
+def calculate_equation_of_time_at(dt: datetime) -> float:
+    """
+    Calculates the Equation of Time at a specific moment.
+
+    Same Smart (1977) approximation as calculate_equation_of_time,
+    but evaluated at the fractional day of year, so the value drifts
+    smoothly through the day instead of holding the midnight value
+    until the next day. At midnight UTC it agrees exactly with
+    calculate_equation_of_time for the same day.
+
+    :param dt: UTC Datetime; naive inputs are assumed to be UTC.
+    :return: Time correction in minutes (positive means Sun is fast).
+    :raises TypeError: If dt is not a datetime.
+    """
+    dt_utc = _to_utc(dt)
+    seconds = (
+        dt_utc.hour * 3600
+        + dt_utc.minute * 60
+        + dt_utc.second
+        + dt_utc.microsecond / 1_000_000
+    )
+    day_number = dt_utc.timetuple().tm_yday + seconds / SECONDS_PER_DAY
+    return _equation_of_time_for_day_number(day_number)
 
 def calculate_solar_longitude(dt: datetime) -> float:
     """

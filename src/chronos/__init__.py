@@ -9,6 +9,7 @@ coordinates (Base-60 / sexagenary), corrected with astronomical physics
 from .cyclic_math import CyclicVariable
 from .astronomy import (
     calculate_equation_of_time,
+    calculate_equation_of_time_at,
     calculate_solar_longitude,
     calculate_solar_declination,
     get_true_solar_time,
@@ -31,6 +32,7 @@ __all__ = [
     "CyclicVariable",
     "TemporalCoordinateEngine",
     "calculate_equation_of_time",
+    "calculate_equation_of_time_at",
     "calculate_solar_longitude",
     "calculate_solar_declination",
     "get_true_solar_time",
