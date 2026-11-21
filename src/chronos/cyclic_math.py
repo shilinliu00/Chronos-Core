@@ -253,6 +253,27 @@ class CyclicVariable:
         # Sum of indices is 1, 13, 25... -> (sum % 12) == 1
         return (self.branch_index + other.branch_index) % 12 == 1
 
+    def is_harmonizing(self, other: 'CyclicVariable') -> bool:
+        """
+        Determines if there is a 'Three Harmony' (San He) relationship.
+
+        The four San He triads share one element: Zi/Chen/Shen (Water),
+        Chou/Si/You (Metal), Yin/Wu/Xu (Fire), Hai/Mao/Wei (Wood).
+        Each triad is exactly one residue class mod 4 of the branch
+        index (e.g. Zi 0, Chen 4, Shen 8 are all 0 mod 4), so two
+        distinct branches harmonize when their indices agree mod 4.
+        A branch does not harmonize with itself.
+
+        :return: Boolean indicating a San He relationship.
+        :raises TypeError: If other is not a CyclicVariable.
+        """
+        if not isinstance(other, CyclicVariable):
+            raise TypeError("is_harmonizing expects a CyclicVariable")
+        return (
+            self.branch_index != other.branch_index
+            and self.branch_index % 4 == other.branch_index % 4
+        )
+
     def ten_god(self, other: 'CyclicVariable') -> str:
         """
         Ten God (十神) relation of the other pillar to this one, judged by

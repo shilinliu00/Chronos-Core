@@ -154,6 +154,27 @@ class TestRelations:
         assert not CyclicVariable(0).is_combining(CyclicVariable(2))
         assert not CyclicVariable(0).is_combining(CyclicVariable(6))
 
+    def test_three_harmonies(self):
+        # San He triads: (0,4,8), (1,5,9), (2,6,10), (3,7,11).
+        for group in [(0, 4, 8), (1, 5, 9), (2, 6, 10), (3, 7, 11)]:
+            for a in group:
+                for b in group:
+                    if a != b:
+                        assert CyclicVariable(a).is_harmonizing(
+                            CyclicVariable(b)
+                        ), (a, b)
+        assert not CyclicVariable(0).is_harmonizing(CyclicVariable(1))
+        assert not CyclicVariable(0).is_harmonizing(CyclicVariable(2))
+        assert not CyclicVariable(0).is_harmonizing(CyclicVariable(0))
+
+    def test_harmonizing_is_symmetric(self):
+        # Same modular check both ways, so the relation must read the
+        # same in either direction for every pair of branches.
+        for a in range(12):
+            for b in range(12):
+                x, y = CyclicVariable(a), CyclicVariable(b)
+                assert x.is_harmonizing(y) == y.is_harmonizing(x), (a, b)
+
     def test_clash_and_combine_are_symmetric(self):
         # Both relations are defined on branch distance, so they must
         # read the same in either direction for every pair of branches.
@@ -175,6 +196,8 @@ class TestRelations:
                 CyclicVariable(0).is_clashing(bad)
             with pytest.raises(TypeError):
                 CyclicVariable(0).is_combining(bad)
+            with pytest.raises(TypeError):
+                CyclicVariable(0).is_harmonizing(bad)
 
     def test_ten_gods_for_yang_day_stem(self):
         # Jia (index 0, yang Wood) day stem against all ten stems.
