@@ -220,7 +220,7 @@ class TestTrueSolarTime:
         dt = utc(2024, 1, 1, 12, 0)
         solar = get_true_solar_time(dt, 0.0)
         expected = dt.replace(tzinfo=None) + timedelta(
-            minutes=calculate_equation_of_time(1)
+            minutes=calculate_equation_of_time_at(dt)
         )
         assert solar == expected
 

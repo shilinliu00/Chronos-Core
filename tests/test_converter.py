@@ -12,7 +12,7 @@ import pytest
 
 from chronos.converter import TemporalCoordinateEngine
 from chronos.cyclic_math import CyclicVariable
-from chronos.astronomy import calculate_equation_of_time
+from chronos.astronomy import calculate_equation_of_time_at
 from chronos.astronomy import solar_term_for_longitude
 
 
@@ -284,9 +284,9 @@ class TestPipeline:
 
     def test_metadata_reports_equation_of_time(self, plain):
         # The metadata value must equal the astronomy function for the
-        # UTC day of the input, regardless of the correction mode.
+        # UTC moment of the input, regardless of the correction mode.
         dt = utc(2024, 2, 4, 12, 0)
-        expected = round(calculate_equation_of_time(dt.timetuple().tm_yday), 3)
+        expected = round(calculate_equation_of_time_at(dt), 3)
         assert plain.get_coordinates(dt, 0.0)["metadata"][
             "equation_of_time_minutes"
         ] == expected

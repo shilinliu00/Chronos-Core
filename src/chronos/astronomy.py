@@ -523,8 +523,9 @@ def get_true_solar_time(dt: datetime, longitude: float) -> datetime:
     geo_offset_minutes = longitude * MINUTES_PER_DEGREE_LONGITUDE
     
     # 2. Equation of Time Calculation
-    day_of_year = dt_utc.timetuple().tm_yday
-    eot_minutes = calculate_equation_of_time(day_of_year)
+    # Evaluated at the fractional day so the correction drifts smoothly
+    # through the day instead of stepping at midnight.
+    eot_minutes = calculate_equation_of_time_at(dt_utc)
     
     # 3. Apply Total Offset
     total_offset = timedelta(minutes=geo_offset_minutes + eot_minutes)

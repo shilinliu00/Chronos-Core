@@ -15,7 +15,7 @@ from typing import Dict, Any, Iterable, List
 
 from .cyclic_math import CyclicVariable
 from .astronomy import get_true_solar_time, calculate_solar_longitude, _to_utc
-from .astronomy import calculate_solar_declination, calculate_equation_of_time
+from .astronomy import calculate_solar_declination, calculate_equation_of_time_at
 from .astronomy import solar_term_for_longitude
 from .astronomy import solar_term_type
 
@@ -152,7 +152,7 @@ class TemporalCoordinateEngine:
         # computed exactly. The precise_mode flag only toggles the EoT/longitude
         # correction applied to the clock time itself (which drives Day/Hour).
         solar_lambda = calculate_solar_longitude(dt)
-        eot_minutes = calculate_equation_of_time(dt.timetuple().tm_yday)
+        eot_minutes = calculate_equation_of_time_at(dt)
         term_en, term_cn = solar_term_for_longitude(solar_lambda)
         if self.precise_mode:
             solar_dt = get_true_solar_time(dt, longitude)
