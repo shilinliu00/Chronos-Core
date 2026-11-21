@@ -40,6 +40,7 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
 * **Chinese label parsing:** `CyclicVariable.from_label_cn(label)` is the inverse of `str()`, turning a two character pillar label such as 甲子 back into its cycle index, and rejecting unknown characters and parity mismatched pairs. Surrounding whitespace is ignored.
 * **Pinyin label parsing:** `CyclicVariable.from_label_en(label)` is the inverse of `stem + branch`, turning a pinyin pillar label such as JiaZi back into its cycle index, and rejecting unknown stems, unknown branches, and parity mismatched pairs. Matching is case insensitive, so `jiazi` and `JIAZI` parse the same way, and surrounding whitespace is ignored.
 * **Ten Gods (十神) layer:** `CyclicVariable.ten_god(other)` judges the classic ten-god relation between two stems from the five-element generation/overcoming cycles plus yin/yang polarity (e.g. 甲日见丙为食神, 甲日见庚为七杀).
+* **Three Harmony (三合) layer:** `CyclicVariable.is_harmonizing(other)` checks whether two branches sit in the same San He triad (Zi/Chen/Shen, Chou/Si/You, Yin/Wu/Xu, Hai/Mao/Wei), which is exactly agreement mod 4 of the branch indices.
 * **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
 * **JSON round trip:** `CyclicVariable.from_json(pillar.to_json())` rebuilds the same pillar; a `label_cn` that disagrees with the index is rejected.
 
@@ -132,7 +133,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-194 tests, 99% coverage. Day-pillar anchors are cross-checked against
+201 tests, 99% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
