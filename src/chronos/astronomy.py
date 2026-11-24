@@ -278,7 +278,9 @@ def next_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, str]:
     for moment, term_en, term_cn in next_solar_terms(dt, 24):
         if term_en == en:
             return moment, term_en, term_cn
-    raise RuntimeError(f"term {en} not found in a full year of terms")
+    # Unreachable: 24 consecutive terms hold every name exactly
+    # once, so the loop above always returns.
+    raise RuntimeError(f"term {en} not found in a full year of terms")  # pragma: no cover
 
 
 def previous_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, str]:
@@ -304,7 +306,9 @@ def previous_solar_term_named(dt: datetime, term: str) -> tuple[datetime, str, s
     for moment, term_en, term_cn in previous_solar_terms(dt, 24):
         if term_en == en:
             return moment, term_en, term_cn
-    raise RuntimeError(f"term {en} not found in a full year of terms")
+    # Unreachable: 24 consecutive terms hold every name exactly
+    # once, so the loop above always returns.
+    raise RuntimeError(f"term {en} not found in a full year of terms")  # pragma: no cover
 
 
 def next_solar_terms_named(dt: datetime, term: str, count: int = 1) -> list[tuple[datetime, str, str]]:
