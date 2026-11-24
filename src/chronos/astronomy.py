@@ -115,6 +115,11 @@ def next_solar_term(dt: datetime) -> tuple[datetime, str, str]:
     lo = dt_utc
     hi = dt_utc + timedelta(days=17)
     for _ in range(50):
+        # The bracket halves each pass, so it is under a second
+        # wide after about 21 passes; stop there instead of
+        # running all 50.
+        if hi - lo < timedelta(seconds=1):
+            break
         mid = lo + (hi - lo) / 2
         if progress(mid) < delta:
             lo = mid
@@ -193,6 +198,11 @@ def previous_solar_term(dt: datetime) -> tuple[datetime, str, str]:
     lo = dt_utc - timedelta(days=17)
     hi = dt_utc
     for _ in range(50):
+        # The bracket halves each pass, so it is under a second
+        # wide after about 21 passes; stop there instead of
+        # running all 50.
+        if hi - lo < timedelta(seconds=1):
+            break
         mid = lo + (hi - lo) / 2
         if progress(mid) < delta:
             hi = mid

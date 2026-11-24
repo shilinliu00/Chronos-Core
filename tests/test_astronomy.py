@@ -390,6 +390,23 @@ class TestNextSolarTerm:
         moment, en, _ = next_solar_term(moment)
         assert en == "YuShui"
 
+    def test_moment_sits_just_past_the_boundary(self):
+        # The search stops once the bracket is under a second wide,
+        # so the returned moment is at most about a second past the
+        # boundary: longitude moves ~0.99 deg per day, ~0.00001 deg
+        # per second, and two seconds earlier it is still before it.
+        for start in (utc(2024, 2, 1, 12, 0), utc(2024, 6, 1, 12, 0)):
+            moment, en, _ = next_solar_term(start)
+            idx = next(i for i, (name, _) in enumerate(SOLAR_TERMS) if name == en)
+            boundary = (315.0 + 15.0 * idx) % 360.0
+            past = (calculate_solar_longitude(moment) - boundary) % 360.0
+            assert past < 0.001, (en, moment, past)
+            before = (
+                calculate_solar_longitude(moment - timedelta(seconds=2))
+                - boundary
+            ) % 360.0
+            assert before > 359.999, (en, moment, before)
+
 
 class TestNextSolarTerms:
     def test_lists_terms_in_order_with_known_moments(self):
@@ -502,6 +519,22 @@ class TestPreviousSolarTerm:
         assert en == "DongZhi"
         moment, en, _ = previous_solar_term(moment)
         assert en == "DaXue"
+
+    def test_moment_sits_just_before_the_boundary(self):
+        # Mirror of the next term check: the returned moment is at
+        # most about a second before the boundary, and two seconds
+        # later it is past it.
+        for start in (utc(2024, 2, 20, 12, 0), utc(2024, 6, 25, 12, 0)):
+            moment, en, _ = previous_solar_term(start)
+            idx = next(i for i, (name, _) in enumerate(SOLAR_TERMS) if name == en)
+            boundary = (315.0 + 15.0 * idx) % 360.0
+            short = (boundary - calculate_solar_longitude(moment)) % 360.0
+            assert short < 0.001, (en, moment, short)
+            past = (
+                boundary
+                - calculate_solar_longitude(moment + timedelta(seconds=2))
+            ) % 360.0
+            assert past > 359.999, (en, moment, past)
 
     def test_round_trips_with_next_solar_term(self):
         # next of a previous boundary is that boundary itself, and
