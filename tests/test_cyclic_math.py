@@ -79,6 +79,16 @@ class TestConstruction:
         assert CyclicVariable.from_label_en("JiChou") == CyclicVariable(25)
         assert CyclicVariable.from_label_en("jichou") == CyclicVariable(25)
 
+    def test_from_label_en_accepts_one_separator(self):
+        # One space or hyphen between stem and branch parses the
+        # same as the joined label, for all sixty pillars.
+        for i in range(60):
+            v = CyclicVariable(i)
+            assert CyclicVariable.from_label_en(v.stem + "-" + v.branch) == v
+            assert CyclicVariable.from_label_en(v.stem + " " + v.branch) == v
+        assert CyclicVariable.from_label_en("jia-zi") == CyclicVariable(0)
+        assert CyclicVariable.from_label_en("Geng Shen") == CyclicVariable(56)
+
     def test_from_label_en_ignores_surrounding_whitespace(self):
         assert CyclicVariable.from_label_en(" JiaZi ") == CyclicVariable(0)
         assert CyclicVariable.from_label_en("\tGengShen\n") == CyclicVariable(56)
@@ -90,7 +100,17 @@ class TestConstruction:
     def test_from_label_en_rejects_bad_labels(self):
         with pytest.raises(TypeError):
             CyclicVariable.from_label_en(0)
-        for bad in ("", "Jia", "JiaZiYi", "JiaX", "JiaChou", "ZiJia", "Jia Zi", " "):
+        for bad in ("", "Jia", "JiaZiYi", "JiaX", "JiaChou", "ZiJia", " "):
+            with pytest.raises(ValueError):
+                CyclicVariable.from_label_en(bad)
+
+    def test_from_label_en_rejects_bad_separators(self):
+        # Two separators, a separator at either end, or a mix of
+        # space and hyphen never parses.
+        for bad in (
+            "Jia--Zi", "Jia  Zi", "-JiaZi", "JiaZi-",
+            "Jia- Zi", "Jia -Zi", "Jia-zi-",
+        ):
             with pytest.raises(ValueError):
                 CyclicVariable.from_label_en(bad)
 

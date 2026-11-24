@@ -149,9 +149,10 @@ class CyclicVariable:
         Matching is case insensitive, so "jiazi", "JiaZi" and
         "JIAZI" all parse to the same pillar. Surrounding whitespace
         is ignored, so a label pasted with spaces around it still
-        parses. Stems are tried longest first because "Ji" is a
-        prefix of "Jia", so a naive first match could split "JiaZi"
-        the wrong way.
+        parses. One space or hyphen may sit between stem and branch,
+        so "Jia-Zi" and "Jia Zi" parse the same as "JiaZi". Stems
+        are tried longest first because "Ji" is a prefix of "Jia",
+        so a naive first match could split "JiaZi" the wrong way.
 
         :param label: A stem from STEMS followed by a branch from
             BRANCHES, in any letter case.
@@ -162,6 +163,15 @@ class CyclicVariable:
         if not isinstance(label, str):
             raise TypeError("label must be a string")
         normalized = label.strip().lower()
+        # One separator between stem and branch is dropped before
+        # parsing, so "Jia-Zi" and "Jia Zi" read as "JiaZi". Labels
+        # with two or more separators, or a separator at either end,
+        # keep the separator and fail the parse below.
+        if normalized.count("-") + normalized.count(" ") == 1:
+            sep = "-" if "-" in normalized else " "
+            stem_text, branch_text = normalized.split(sep)
+            if stem_text and branch_text:
+                normalized = stem_text + branch_text
         for stem_idx, stem in cls._STEMS_LONGEST_FIRST:
             stem_lower = stem.lower()
             if not normalized.startswith(stem_lower):
