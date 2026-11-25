@@ -198,6 +198,38 @@ class TestRelations:
             with pytest.raises(TypeError):
                 CyclicVariable(0).is_harming(bad)
 
+    def test_three_punishments(self):
+        # San Xing directed pairs: Zi/Mao mutual, Yin -> Si -> Shen
+        # -> Yin, Chou -> Wei -> Xu -> Chou, and the four self
+        # punishments Chen, Wu, You, Hai.
+        directed = [
+            (0, 3), (3, 0),
+            (2, 5), (5, 8), (8, 2),
+            (1, 7), (7, 10), (10, 1),
+            (4, 4), (6, 6), (9, 9), (11, 11),
+        ]
+        for a, b in directed:
+            assert CyclicVariable(a).is_penalizing(CyclicVariable(b)), (a, b)
+        # The triad cycles run one way only: the reverse direction
+        # of each step is not a punishment.
+        for a, b in [(5, 2), (8, 5), (2, 8), (7, 1), (10, 7), (1, 10)]:
+            assert not CyclicVariable(a).is_penalizing(CyclicVariable(b)), (a, b)
+        # Exactly the twelve listed pairs punish, out of all 144.
+        count = sum(
+            CyclicVariable(a).is_penalizing(CyclicVariable(b))
+            for a in range(12) for b in range(12)
+        )
+        assert count == 12
+        # Only the four self punishment branches penalize themselves.
+        for a in range(12):
+            x = CyclicVariable(a)
+            assert x.is_penalizing(x) == (a in (4, 6, 9, 11)), a
+
+    def test_penalizing_rejects_wrong_type(self):
+        for bad in (0, "JiaZi", None):
+            with pytest.raises(TypeError):
+                CyclicVariable(0).is_penalizing(bad)
+
     def test_three_harmonies(self):
         # San He triads: (0,4,8), (1,5,9), (2,6,10), (3,7,11).
         for group in [(0, 4, 8), (1, 5, 9), (2, 6, 10), (3, 7, 11)]:

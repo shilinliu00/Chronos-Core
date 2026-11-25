@@ -68,6 +68,17 @@ class CyclicVariable:
         3: ("七杀", "正官"),
     }
 
+    # Three Punishments (San Xing) as directed branch pairs:
+    # Zi/Mao punish each other; Yin penalizes Si, Si penalizes Shen,
+    # Shen penalizes Yin; Chou penalizes Wei, Wei penalizes Xu, Xu
+    # penalizes Chou; Chen, Wu, You and Hai punish themselves.
+    _PENALIZING_PAIRS = frozenset({
+        (0, 3), (3, 0),
+        (2, 5), (5, 8), (8, 2),
+        (1, 7), (7, 10), (10, 1),
+        (4, 4), (6, 6), (9, 9), (11, 11),
+    })
+
     def __init__(self, index: int):
         """
         Creates a variable from a raw position in Z_60.
@@ -301,6 +312,25 @@ class CyclicVariable:
         if not isinstance(other, CyclicVariable):
             raise TypeError("is_harming expects a CyclicVariable")
         return (self.branch_index + other.branch_index) % 12 == 7
+
+    def is_penalizing(self, other: 'CyclicVariable') -> bool:
+        """
+        Determines if this branch penalizes the other in the
+        'Three Punishments' (San Xing) relation.
+
+        Unlike clash, combine and harm, this relation is directed:
+        in the Yin/Si/Shen and Chou/Wei/Xu triads each branch
+        penalizes the next one in the cycle and not the one before
+        it (e.g. Yin penalizes Si, but Si does not penalize Yin).
+        Zi and Mao punish each other, and Chen, Wu, You and Hai
+        punish themselves, so a branch can penalize itself.
+
+        :return: Boolean indicating this branch penalizes the other.
+        :raises TypeError: If other is not a CyclicVariable.
+        """
+        if not isinstance(other, CyclicVariable):
+            raise TypeError("is_penalizing expects a CyclicVariable")
+        return (self.branch_index, other.branch_index) in self._PENALIZING_PAIRS
 
     def ten_god(self, other: 'CyclicVariable') -> str:
         """
