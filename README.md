@@ -41,6 +41,8 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
 * **Pinyin label parsing:** `CyclicVariable.from_label_en(label)` is the inverse of `stem + branch`, turning a pinyin pillar label such as JiaZi back into its cycle index, and rejecting unknown stems, unknown branches, and parity mismatched pairs. Matching is case insensitive, so `jiazi` and `JIAZI` parse the same way, and surrounding whitespace is ignored. One space or hyphen may sit between stem and branch, so `Jia-Zi` and `Jia Zi` parse the same as `JiaZi`.
 * **Ten Gods (十神) layer:** `CyclicVariable.ten_god(other)` judges the classic ten-god relation between two stems from the five-element generation/overcoming cycles plus yin/yang polarity (e.g. 甲日见丙为食神, 甲日见庚为七杀).
 * **Three Harmony (三合) layer:** `CyclicVariable.is_harmonizing(other)` checks whether two branches sit in the same San He triad (Zi/Chen/Shen, Chou/Si/You, Yin/Wu/Xu, Hai/Mao/Wei), which is exactly agreement mod 4 of the branch indices.
+* **Six Harms (六害) layer:** `CyclicVariable.is_harming(other)` checks whether two branches form a Liu Hai pair (Zi/Wei, Chou/Wu, Yin/Si, Mao/Chen, Shen/Hai, You/Xu), which is exactly a branch index sum of 7 mod 12.
+* **Three Punishments (三刑) layer:** `CyclicVariable.is_penalizing(other)` checks whether this branch penalizes the other in the San Xing relation. Unlike the other branch relations it is directed: Yin penalizes Si, Si penalizes Shen, Shen penalizes Yin, and likewise Chou, Wei and Xu in turn; Zi and Mao punish each other, and Chen, Wu, You and Hai punish themselves.
 * **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
 * **JSON round trip:** `CyclicVariable.from_json(pillar.to_json())` rebuilds the same pillar; a `label_cn` that disagrees with the index is rejected.
 
@@ -133,7 +135,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-205 tests, 100% coverage. Day-pillar anchors are cross-checked against
+210 tests, 100% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
