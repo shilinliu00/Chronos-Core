@@ -284,6 +284,24 @@ class CyclicVariable:
             and self.branch_index % 4 == other.branch_index % 4
         )
 
+    def is_harming(self, other: 'CyclicVariable') -> bool:
+        """
+        Determines if there is a 'Six Harms' (Liu Hai) relationship.
+
+        The six harm pairs are Zi/Wei, Chou/Wu, Yin/Si, Mao/Chen,
+        Shen/Hai, You/Xu. Each pair sums to 7 mod 12 (e.g. Zi 0 +
+        Wei 7 = 7, Shen 8 + Hai 11 = 19 = 7 mod 12), so two branches
+        harm each other exactly when their indices sum to 7 mod 12.
+        No branch harms itself: twice an index is always even mod 12
+        and can never be 7.
+
+        :return: Boolean indicating a Six Harms relationship.
+        :raises TypeError: If other is not a CyclicVariable.
+        """
+        if not isinstance(other, CyclicVariable):
+            raise TypeError("is_harming expects a CyclicVariable")
+        return (self.branch_index + other.branch_index) % 12 == 7
+
     def ten_god(self, other: 'CyclicVariable') -> str:
         """
         Ten God (十神) relation of the other pillar to this one, judged by

@@ -174,6 +174,30 @@ class TestRelations:
         assert not CyclicVariable(0).is_combining(CyclicVariable(2))
         assert not CyclicVariable(0).is_combining(CyclicVariable(6))
 
+    def test_six_harms(self):
+        # Liu Hai pairs: (0,7), (1,6), (2,5), (3,4), (8,11), (9,10).
+        for a, b in [(0, 7), (1, 6), (2, 5), (3, 4), (8, 11), (9, 10)]:
+            assert CyclicVariable(a).is_harming(CyclicVariable(b)), (a, b)
+            assert CyclicVariable(b).is_harming(CyclicVariable(a)), (b, a)
+        assert not CyclicVariable(0).is_harming(CyclicVariable(1))
+        assert not CyclicVariable(0).is_harming(CyclicVariable(6))
+        # Twice an index is even mod 12, so no branch harms itself.
+        for a in range(12):
+            assert not CyclicVariable(a).is_harming(CyclicVariable(a))
+
+    def test_harming_is_symmetric(self):
+        # The harm check is a sum mod 12, so it must read the same
+        # in either direction for every pair of branches.
+        for a in range(12):
+            for b in range(12):
+                x, y = CyclicVariable(a), CyclicVariable(b)
+                assert x.is_harming(y) == y.is_harming(x), (a, b)
+
+    def test_harming_rejects_wrong_type(self):
+        for bad in (0, "JiaZi", None):
+            with pytest.raises(TypeError):
+                CyclicVariable(0).is_harming(bad)
+
     def test_three_harmonies(self):
         # San He triads: (0,4,8), (1,5,9), (2,6,10), (3,7,11).
         for group in [(0, 4, 8), (1, 5, 9), (2, 6, 10), (3, 7, 11)]:
