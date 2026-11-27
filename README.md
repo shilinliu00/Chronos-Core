@@ -44,6 +44,7 @@ Temporal coordinates are modeled within a finite cyclic group $\mathbb{Z}_{60}$.
 * **Six Harms (六害) layer:** `CyclicVariable.is_harming(other)` checks whether two branches form a Liu Hai pair (Zi/Wei, Chou/Wu, Yin/Si, Mao/Chen, Shen/Hai, You/Xu), which is exactly a branch index sum of 7 mod 12.
 * **Three Punishments (三刑) layer:** `CyclicVariable.is_penalizing(other)` checks whether this branch penalizes the other in the San Xing relation. Unlike the other branch relations it is directed: Yin penalizes Si, Si penalizes Shen, Shen penalizes Yin, and likewise Chou, Wei and Xu in turn; Zi and Mao punish each other, and Chen, Wu, You and Hai punish themselves.
 * **NaYin (纳音) layer:** each pillar exposes its classical NaYin name and element (30 attributes over the 60 pillars), serialized in `to_json()`.
+* **Hidden Stems (藏干) layer:** each pillar exposes the stems stored inside its branch, main qi (本气) first — e.g. Zi hides only Gui, Chou hides Ji, Gui and Xin. Available as `hidden_stems` and `hidden_stems_cn`, and serialized in `to_json()`.
 * **JSON round trip:** `CyclicVariable.from_json(pillar.to_json())` rebuilds the same pillar; a `label_cn` that disagrees with the index is rejected.
 
 ---
@@ -135,7 +136,7 @@ pip install -r requirements.txt
 PYTHONPATH=src pytest tests/ -q
 ```
 
-210 tests, 100% coverage. Day-pillar anchors are cross-checked against
+216 tests, 100% coverage. Day-pillar anchors are cross-checked against
 published perpetual calendars (万年历): `2024-01-01 = 甲子日`; the solar
 longitude kernel is validated against the true moments of the 2024 solar
 terms (max error 0.006°, ≈ 25 seconds of time); Equation-of-Time extrema
