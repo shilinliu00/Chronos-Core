@@ -391,8 +391,15 @@ class TestIdentity:
             "element": "Wood",
             "na_yin": "海中金",
             "na_yin_element": "Metal",
+            "hidden_stems": ["Gui"],
+            "hidden_stems_cn": ["癸"],
             "label_cn": "甲子",
         }
+
+    def test_to_json_hidden_stems_track_branch(self):
+        # Yi-Chou hides Ji, Gui, Xin; Gui-Hai hides Ren, Jia.
+        assert CyclicVariable(1).to_json()["hidden_stems"] == ["Ji", "Gui", "Xin"]
+        assert CyclicVariable(59).to_json()["hidden_stems_cn"] == ["壬", "甲"]
 
     def test_repr(self):
         assert repr(CyclicVariable(0)) == "<CV(0): JiaZi (甲子)>"

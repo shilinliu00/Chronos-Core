@@ -454,6 +454,8 @@ class CyclicVariable:
             "element": self.element,
             "na_yin": self.na_yin,
             "na_yin_element": self.na_yin_element,
+            "hidden_stems": list(self.hidden_stems),
+            "hidden_stems_cn": list(self.hidden_stems_cn),
             "label_cn": f"{self.stem_cn}{self.branch_cn}"
         }
 
