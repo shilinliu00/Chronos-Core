@@ -249,6 +249,43 @@ class CyclicVariable:
         """Elemental attribute (WuXing) of the pillar's NaYin."""
         return self.NAYIN[self._index // 2][1]
 
+    # Hidden Stems (藏干): the stems stored inside each Earthly Branch,
+    # as stem indices in order: main qi (本气) first, then middle qi
+    # (中气), then residual qi (余气). The classic table, e.g. Zi holds
+    # only Gui, Chou holds Ji, Gui, Xin, Yin holds Jia, Bing, Wu.
+    _HIDDEN_STEMS = (
+        (9,),            # Zi 子: Gui 癸
+        (5, 9, 7),       # Chou 丑: Ji 己, Gui 癸, Xin 辛
+        (0, 2, 4),       # Yin 寅: Jia 甲, Bing 丙, Wu 戊
+        (1,),            # Mao 卯: Yi 乙
+        (4, 1, 9),       # Chen 辰: Wu 戊, Yi 乙, Gui 癸
+        (2, 6, 4),       # Si 巳: Bing 丙, Geng 庚, Wu 戊
+        (3, 5),          # Wu 午: Ding 丁, Ji 己
+        (5, 1, 3),       # Wei 未: Ji 己, Yi 乙, Ding 丁
+        (6, 8, 4),       # Shen 申: Geng 庚, Ren 壬, Wu 戊
+        (7,),            # You 酉: Xin 辛
+        (4, 7, 3),       # Xu 戌: Wu 戊, Xin 辛, Ding 丁
+        (8, 0),          # Hai 亥: Ren 壬, Jia 甲
+    )
+
+    @property
+    def hidden_stems(self) -> tuple[str, ...]:
+        """
+        Hidden Stems (藏干) of the pillar's branch, in order.
+
+        The branch stores one to three stems: the main qi (本气) first,
+        then middle qi (中气), then residual qi (余气). For example
+        Chou holds Ji, Gui, Xin, while Zi holds only Gui. The stems
+        depend on the branch alone, so every pillar sharing a branch
+        reports the same hidden stems.
+        """
+        return tuple(self.STEMS[i] for i in self._HIDDEN_STEMS[self.branch_index])
+
+    @property
+    def hidden_stems_cn(self) -> tuple[str, ...]:
+        """Chinese characters of the pillar's Hidden Stems, same order."""
+        return tuple(self.STEMS_CN[i] for i in self._HIDDEN_STEMS[self.branch_index])
+
     def is_clashing(self, other: 'CyclicVariable') -> bool:
         """
         Determines if there is a 'Clash' (Antagonistic relationship) using modular arithmetic.

@@ -426,3 +426,47 @@ class TestNaYin:
         for i in range(0, 60, 2):
             assert CyclicVariable(i).na_yin == CyclicVariable(i + 1).na_yin
         assert CyclicVariable(1).na_yin != CyclicVariable(2).na_yin
+
+
+class TestHiddenStems:
+    def test_table_covers_all_twelve_branches(self):
+        assert len(CyclicVariable._HIDDEN_STEMS) == 12
+
+    def test_full_table_matches_classic_cang_gan(self):
+        # Stem indices: Jia 0, Yi 1, Bing 2, Ding 3, Wu 4,
+        # Ji 5, Geng 6, Xin 7, Ren 8, Gui 9.
+        expected = {
+            0: ("Gui",),                  # Zi 子
+            1: ("Ji", "Gui", "Xin"),      # Chou 丑
+            2: ("Jia", "Bing", "Wu"),     # Yin 寅
+            3: ("Yi",),                   # Mao 卯
+            4: ("Wu", "Yi", "Gui"),       # Chen 辰
+            5: ("Bing", "Geng", "Wu"),    # Si 巳
+            6: ("Ding", "Ji"),            # Wu 午
+            7: ("Ji", "Yi", "Ding"),      # Wei 未
+            8: ("Geng", "Ren", "Wu"),     # Shen 申
+            9: ("Xin",),                  # You 酉
+            10: ("Wu", "Xin", "Ding"),    # Xu 戌
+            11: ("Ren", "Jia"),           # Hai 亥
+        }
+        for branch, stems in expected.items():
+            v = CyclicVariable.from_stem_branch(branch % 2, branch)
+            assert v.hidden_stems == stems, branch
+
+    def test_chinese_names_match_english_ones(self):
+        assert CyclicVariable(0).hidden_stems_cn == ("癸",)        # Jia-Zi
+        assert CyclicVariable(1).hidden_stems_cn == ("己", "癸", "辛")  # Yi-Chou
+        assert CyclicVariable(2).hidden_stems_cn == ("甲", "丙", "戊")  # Bing-Yin
+        assert CyclicVariable(59).hidden_stems_cn == ("壬", "甲")  # Gui-Hai
+
+    def test_hidden_stems_depend_on_branch_only(self):
+        # Jia-Zi and Wu-Zi share branch Zi, so both hide only Gui.
+        assert CyclicVariable(0).hidden_stems == CyclicVariable(24).hidden_stems
+        assert CyclicVariable(0).hidden_stems == ("Gui",)
+
+    def test_main_qi_is_first(self):
+        # The first hidden stem is the branch's main qi (本气).
+        assert CyclicVariable(0).hidden_stems[0] == "Gui"    # Zi
+        assert CyclicVariable(3).hidden_stems[0] == "Yi"     # Mao
+        assert CyclicVariable(6).hidden_stems[0] == "Ding"   # Wu
+        assert CyclicVariable(9).hidden_stems[0] == "Xin"    # You
